@@ -17,7 +17,7 @@ Instruction to run the package:
 
 Please, follow the example below to run the package. Several additional examples in addition to the one listed below, are listed in the ipfn.py script.
 
-First, let us define a matrix of N=3 dimensions, the matrix being of specific size 2*4*3
+First, let us define a matrix of N=3 dimensions, the matrix being of specific size 2*4*3::
     m = np.zeros((2,4,3))
 
 First, define the aggregates or marginals. They should be at most of dimensions N-1. Then, list
