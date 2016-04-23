@@ -3,6 +3,12 @@ ipfn
 
 Iterative proportional fitting is an algorithm used is many different fields such as economics or social sciences, to alter results in such a way that aggregates along one or several dimensions match known marginals (or aggregates along these same dimensions).
 
+The algorithm exists in 2 versions:
+- numpy version, which the fastest by far: ipfn_np
+- pandas version, which is much slower but easier to use than the numpy version: ipfn_df
+
+The pandas version is suitable on only smaller problems.
+
 For more information and examples, please visit:
 - `wikipedia page on ipf <https://en.wikipedia.org/wiki/Iterative_proportional_fitting>`_
 - `slides explaining the methodology and links to specific examples <http://www.demog.berkeley.edu/~eddieh/IPFDescription/AKDOLWDIPFTWOD.pdf>`_
@@ -13,8 +19,8 @@ The project is similar to the ipfp package available for R and tests have been r
 
 ----
 
-Example:
---------
+Example with the numpy version of the algorithm:
+------------------------------------------------
 Please, follow the example below to run the package. Several additional examples in addition to the one listed below, are listed in the ipfn.py script. This example is taken from `<http://www.demog.berkeley.edu/~eddieh/IPFDescription/AKDOLWDIPFTHREED.pdf>`_
 
 First, let us define a matrix of N=3 dimensions, the matrix being of specific size 2*4*3 and populate that matrix with some values ::
@@ -71,3 +77,10 @@ Finally, run the algorithm::
         m = ipfn().ipfn_np(m, aggregates, dimensions)
     print xijp[0,0]
     print m[0, 0, :].sum()
+
+Added notes:
+------------
+
+Several examples, using the numpy or pandas version of the algorithm are listed in the script `ipfn.py <https://github.com/Dirguis/ipfn.git>`_. Comment, uncomment to parts of interests and run the script::
+
+    python ipfn.py
