@@ -13,8 +13,8 @@ The project is similar to the ipfp package available for R and tests have been r
 
 ----
 
-### Example:
-
+Example:
+--------
 Please, follow the example below to run the package. Several additional examples in addition to the one listed below, are listed in the ipfn.py script. This example is taken from `<http://www.demog.berkeley.edu/~eddieh/IPFDescription/AKDOLWDIPFTHREED.pdf>`_
 
 First, let us define a matrix of N=3 dimensions, the matrix being of specific size 2*4*3 and populate that matrix with some values ::
@@ -59,3 +59,15 @@ The marginals are::
     xpjk = np.array([[7, 9, 4], [8, 12, 10], [15, 12, 8], [5, 7, 3]])
 
 I used the letter p to denote the dimension(s) being summed over
+
+Define the aggregates list and the corresponding list of dimension to indicate the algorithm which dimension(s) to sum over for each aggregate::
+
+    aggregates = [xipp, xpjp, xppk, xijp, xpjk]
+    dimensions = [[0], [1], [2], [0, 1], [1, 2]]
+
+Finally, run the algorithm::
+
+    for inc in range(10):
+        m = ipfn().ipfn_np(m, aggregates, dimensions)
+    print xijp[0,0]
+    print m[0, 0, :].sum()

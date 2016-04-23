@@ -113,46 +113,46 @@ if __name__ == '__main__':
 
     # Example 2, 3D using ipfn_np, link: http://www.demog.berkeley.edu/~eddieh/IPFDescription/AKDOLWDIPFTHREED.pdf
     # There is a link to a excel file with the example if interested
-    # m = np.zeros((2,4,3))
-    # m[0,0,0] = 1
-    # m[0,0,1] = 2
-    # m[0,0,2] = 1
-    # m[0,1,0] = 3
-    # m[0,1,1] = 5
-    # m[0,1,2] = 5
-    # m[0,2,0] = 6
-    # m[0,2,1] = 2
-    # m[0,2,2] = 2
-    # m[0,3,0] = 1
-    # m[0,3,1] = 7
-    # m[0,3,2] = 2
-    #
-    # m[1,0,0] = 5
-    # m[1,0,1] = 4
-    # m[1,0,2] = 2
-    # m[1,1,0] = 5
-    # m[1,1,1] = 5
-    # m[1,1,2] = 5
-    # m[1,2,0] = 3
-    # m[1,2,1] = 8
-    # m[1,2,2] = 7
-    # m[1,3,0] = 2
-    # m[1,3,1] = 7
-    # m[1,3,2] = 6
-    #
-    # xipp = np.array([52, 48])
-    # xpjp = np.array([20, 30, 35, 15])
-    # xppk = np.array([35, 40, 25])
-    # xijp = np.array([[9, 17, 19, 7], [11, 13, 16, 8]])
-    # # xijp = xijp.T
-    # xpjk = np.array([[7, 9, 4], [8, 12, 10], [15, 12, 8], [5, 7, 3]])
-    # aggregates = [xipp, xpjp, xppk, xijp, xpjk]
-    # dimensions = [[0], [1], [2], [0, 1], [1, 2]]
-    #
-    # for inc in range(10):
-    #     m = ipfn().ipfn_np(m, aggregates, dimensions)
-    # print m
-    # print m[0, 0, :].sum()
+    m = np.zeros((2,4,3))
+    m[0,0,0] = 1
+    m[0,0,1] = 2
+    m[0,0,2] = 1
+    m[0,1,0] = 3
+    m[0,1,1] = 5
+    m[0,1,2] = 5
+    m[0,2,0] = 6
+    m[0,2,1] = 2
+    m[0,2,2] = 2
+    m[0,3,0] = 1
+    m[0,3,1] = 7
+    m[0,3,2] = 2
+
+    m[1,0,0] = 5
+    m[1,0,1] = 4
+    m[1,0,2] = 2
+    m[1,1,0] = 5
+    m[1,1,1] = 5
+    m[1,1,2] = 5
+    m[1,2,0] = 3
+    m[1,2,1] = 8
+    m[1,2,2] = 7
+    m[1,3,0] = 2
+    m[1,3,1] = 7
+    m[1,3,2] = 6
+
+    xipp = np.array([52, 48])
+    xpjp = np.array([20, 30, 35, 15])
+    xppk = np.array([35, 40, 25])
+    xijp = np.array([[9, 17, 19, 7], [11, 13, 16, 8]])
+    # xijp = xijp.T
+    xpjk = np.array([[7, 9, 4], [8, 12, 10], [15, 12, 8], [5, 7, 3]])
+    aggregates = [xipp, xpjp, xppk, xijp, xpjk]
+    dimensions = [[0], [1], [2], [0, 1], [1, 2]]
+
+    for inc in range(10):
+        m = ipfn().ipfn_np(m, aggregates, dimensions)
+    print xijp[0,0]
+    print m[0, 0, :].sum()
 
 
 
@@ -261,58 +261,58 @@ if __name__ == '__main__':
 
 
     # Example 3D with ipfn_df
-    m      = np.array([1., 2., 1., 3., 5., 5., 6., 2., 2., 1., 7., 2.,
-                   5., 4., 2., 5., 5., 5., 3., 8., 7., 2., 7., 6.], )
-    dma_l  = [501, 501, 501, 501, 501, 501, 501, 501, 501, 501, 501, 501,
-              502, 502, 502, 502, 502, 502, 502, 502, 502, 502, 502, 502]
-    size_l = [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
-              1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4]
-
-    age_l  = ['20-25','30-35','40-45',
-              '20-25','30-35','40-45',
-              '20-25','30-35','40-45',
-              '20-25','30-35','40-45',
-              '20-25','30-35','40-45',
-              '20-25','30-35','40-45',
-              '20-25','30-35','40-45',
-              '20-25','30-35','40-45']
-
-    df = pd.DataFrame()
-    df['dma'] = dma_l
-    df['size'] = size_l
-    df['age'] = age_l
-    df['total'] = m
-
-    xipp = df.groupby('dma')['total'].sum()
-    xpjp = df.groupby('size')['total'].sum()
-    xppk = df.groupby('age')['total'].sum()
-    xijp = df.groupby(['dma', 'size'])['total'].sum()
-    xpjk = df.groupby(['size', 'age'])['total'].sum()
+    # m      = np.array([1., 2., 1., 3., 5., 5., 6., 2., 2., 1., 7., 2.,
+    #                5., 4., 2., 5., 5., 5., 3., 8., 7., 2., 7., 6.], )
+    # dma_l  = [501, 501, 501, 501, 501, 501, 501, 501, 501, 501, 501, 501,
+    #           502, 502, 502, 502, 502, 502, 502, 502, 502, 502, 502, 502]
+    # size_l = [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
+    #           1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4]
+    #
+    # age_l  = ['20-25','30-35','40-45',
+    #           '20-25','30-35','40-45',
+    #           '20-25','30-35','40-45',
+    #           '20-25','30-35','40-45',
+    #           '20-25','30-35','40-45',
+    #           '20-25','30-35','40-45',
+    #           '20-25','30-35','40-45',
+    #           '20-25','30-35','40-45']
+    #
+    # df = pd.DataFrame()
+    # df['dma'] = dma_l
+    # df['size'] = size_l
+    # df['age'] = age_l
+    # df['total'] = m
+    #
+    # xipp = df.groupby('dma')['total'].sum()
+    # xpjp = df.groupby('size')['total'].sum()
     # xppk = df.groupby('age')['total'].sum()
-
-    xipp.loc[501] = 52
-    xipp.loc[502] = 48
-
-    xpjp.loc[1] = 20
-    xpjp.loc[2] = 30
-    xpjp.loc[3] = 35
-    xpjp.loc[4] = 15
-
-    xppk.loc['20-25'] = 35
-    xppk.loc['30-35'] = 40
-    xppk.loc['40-45'] = 25
-
-    xijp.loc[501] = [9, 17, 19, 7]
-    xijp.loc[502] = [11, 13, 16, 8]
-
-    xpjk.loc[1] = [7, 9, 4]
-    xpjk.loc[2] = [8, 12, 10]
-    xpjk.loc[3] = [15, 12, 8]
-    xpjk.loc[4] = [5, 7, 3]
-
-    for inc in range(10):
-        df = ipfn().ipfn_df(df, [xipp, xpjp, xppk, xijp, xpjk],
-                [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']])
-
-    print df
-    print df.groupby('size')['total'].sum(), xpjp
+    # xijp = df.groupby(['dma', 'size'])['total'].sum()
+    # xpjk = df.groupby(['size', 'age'])['total'].sum()
+    # # xppk = df.groupby('age')['total'].sum()
+    #
+    # xipp.loc[501] = 52
+    # xipp.loc[502] = 48
+    #
+    # xpjp.loc[1] = 20
+    # xpjp.loc[2] = 30
+    # xpjp.loc[3] = 35
+    # xpjp.loc[4] = 15
+    #
+    # xppk.loc['20-25'] = 35
+    # xppk.loc['30-35'] = 40
+    # xppk.loc['40-45'] = 25
+    #
+    # xijp.loc[501] = [9, 17, 19, 7]
+    # xijp.loc[502] = [11, 13, 16, 8]
+    #
+    # xpjk.loc[1] = [7, 9, 4]
+    # xpjk.loc[2] = [8, 12, 10]
+    # xpjk.loc[3] = [15, 12, 8]
+    # xpjk.loc[4] = [5, 7, 3]
+    #
+    # for inc in range(10):
+    #     df = ipfn().ipfn_df(df, [xipp, xpjp, xppk, xijp, xpjk],
+    #             [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']])
+    #
+    # print df
+    # print df.groupby('size')['total'].sum(), xpjp
