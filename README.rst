@@ -74,7 +74,7 @@ Define the aggregates list and the corresponding list of dimension to indicate t
 Finally, run the algorithm::
 
     for inc in range(10):
-        m = ipfn().ipfn_np(m, aggregates, dimensions)
+        m = ipfn_np(m, aggregates, dimensions)
     print xijp[0,0]
     print m[0, 0, :].sum()
 
@@ -88,4 +88,3 @@ Several examples, using the numpy or pandas version of the algorithm are listed 
 To call the algorithm in a program, execute::
 
     import ipfn
-    
