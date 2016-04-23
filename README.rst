@@ -84,3 +84,8 @@ Added notes:
 Several examples, using the numpy or pandas version of the algorithm are listed in the script `ipfn.py <https://github.com/Dirguis/ipfn.git>`_. Comment, uncomment to parts of interests and run the script::
 
     python ipfn.py
+
+To call the algorithm in a program, execute::
+
+    import ipfn
+    

@@ -3,100 +3,104 @@ import numpy as np
 import pandas as pd
 import sys
 from itertools import product
+import warnings
+warnings.filterwarnings('ignore')
 
-class ipfn(object):
+def index_axis_elem(dims, axes, elems):
+    inc_axis = 0
+    idx = ()
+    for dim in range(dims):
+        if (inc_axis < len(axes)):
+            if (dim == axes[inc_axis]):
+                idx += (elems[inc_axis],)
+                inc_axis += 1
+            else:
+                idx += (np.s_[:],)
+    return idx
 
-    @staticmethod
-    def index_axis_elem(dims, axes, elems):
-        inc_axis = 0
-        idx = ()
-        for dim in range(dims):
-            if (inc_axis < len(axes)):
-                if (dim == axes[inc_axis]):
-                    idx += (elems[inc_axis],)
-                    inc_axis += 1
-                else:
-                    idx += (np.s_[:],)
-        return idx
+def ipfn_np(m, aggregates, dimensions):
+    steps = len(aggregates)
+    dim = len(m.shape)
+    product_elem = []
+    tables = [m]
+    for inc in range(steps-1):
+        tables.append(np.array(np.zeros(m.shape)))
 
-    def ipfn_np(self, m, aggregates, dimensions):
-        steps = len(aggregates)
-        dim = len(m.shape)
+    for inc in range(steps):
+        if inc == (steps-1):
+            table_update  = m
+            table_current = tables[inc]
+        else:
+            table_update  = tables[inc+1]
+            table_current = tables[inc]
+        for dimension in dimensions[inc]:
+            product_elem.append(range(m.shape[dimension]))
+        for item in product(*product_elem):
+            idx = index_axis_elem(dim, dimensions[inc], item)
+            table_current_slice = table_current[idx]
+            mijk = table_current_slice.sum()
+            xijk  = aggregates[inc]
+            xijk = xijk[item]
+            if mijk == 0:
+                # table_current_slice += 1e-5
+                table_update[idx] = table_current_slice*1.0*xijk
+            else:
+                table_update[idx] = table_current_slice*1.0*xijk/mijk
+            # For debug purposes
+            # if np.isnan(table_update).any():
+            #     print idx
+            #     sys.exit(0)
         product_elem = []
-        tables = [m]
-        for inc in range(steps-1):
-            tables.append(np.array(np.zeros(m.shape)))
-
-        for inc in range(steps):
-            if inc == (steps-1):
-                table_update  = m
-                table_current = tables[inc]
-            else:
-                table_update  = tables[inc+1]
-                table_current = tables[inc]
-            for dimension in dimensions[inc]:
-                product_elem.append(range(m.shape[dimension]))
-            for item in product(*product_elem):
-                idx = self.index_axis_elem(dim, dimensions[inc], item)
-                table_current_slice = table_current[idx]
-                mijk = table_current_slice.sum()
-                xijk  = aggregates[inc]
-                xijk = xijk[item]
-                if mijk == 0:
-                    # table_current_slice += 1e-5
-                    table_update[idx] = table_current_slice*1.0*xijk
-                else:
-                    table_update[idx] = table_current_slice*1.0*xijk/mijk
-                # For debug purposes
-                # if np.isnan(table_update).any():
-                #     print idx
-                #     sys.exit(0)
-            product_elem = []
-        return m
+    return m
 
 
 
-    def ipfn_df(self, df, aggregates, dimensions):
+def ipfn_df(df, aggregates, dimensions):
 
-        steps = len(aggregates)
-        tables = [df]
-        for inc in range(steps-1):
-                tables.append(df.copy())
+    steps = len(aggregates)
+    tables = [df]
+    for inc in range(steps-1):
+            tables.append(df.copy())
 
-        inc=0
-        for features in dimensions:
-            if inc == (steps-1):
-                table_update  = df
-                table_current = tables[inc]
-            else:
-                table_update  = tables[inc+1]
-                table_current = tables[inc]
+    inc=0
+    for features in dimensions:
+        if inc == (steps-1):
+            table_update  = df
+            table_current = tables[inc]
+        else:
+            table_update  = tables[inc+1]
+            table_current = tables[inc]
 
-            tmp  = table_current.groupby(features)['total'].sum()
-            xijk = aggregates[inc]
+        tmp  = table_current.groupby(features)['total'].sum()
+        xijk = aggregates[inc]
 
-            feat_l = []
-            for feature in features:
-                feat_l.append(np.unique(table_current[feature]))
-            table_update.set_index(features, inplace=True)
-            table_current.set_index(features, inplace=True)
-            # table_update.sortlevel(inplace=True,sort_remaining=True)
-            # table_current.sortlevel(inplace=True,sort_remaining=True)
+        feat_l = []
+        for feature in features:
+            feat_l.append(np.unique(table_current[feature]))
+        table_update.set_index(features, inplace=True)
+        table_current.set_index(features, inplace=True)
+        # table_update.sortlevel(inplace=True,sort_remaining=True)
+        # table_current.sortlevel(inplace=True,sort_remaining=True)
 
-            for feature in product(*feat_l):
+        for feature in product(*feat_l):
 
+            den = tmp.loc[feature]
+            if den.sum() == 0:
                 table_update.loc[feature, 'total'] =\
                 table_current.loc[feature, 'total']*\
-                xijk.loc[feature]/tmp.loc[feature]
+                xijk.loc[feature]
+            else:
+                table_update.loc[feature, 'total'] =\
+                table_current.loc[feature, 'total']*\
+                xijk.loc[feature]/den
 
-            table_update.reset_index(inplace=True)
-            table_current.reset_index(inplace=True)
-            inc+=1
-            feat_l = []
-        return df
+        table_update.reset_index(inplace=True)
+        table_current.reset_index(inplace=True)
+        inc+=1
+        feat_l = []
+    return df
 
 if __name__ == '__main__':
-
 
     # Example 1, 2D using ipfn_np, link: http://www.real-statistics.com/matrices-and-iterative-procedures/iterative-proportional-fitting-procedure-ipfp/
     # m = np.array([[8., 4., 6., 7.], [3., 6., 5., 2.], [9., 11., 3., 1.]], )
@@ -106,7 +110,7 @@ if __name__ == '__main__':
     # dimensions = [[0], [1]]
     #
     # for inc in range(10):
-    #     m = ipfn().ipfn_np(m, aggregates, dimensions)
+    #     m = ipfn_np(m, aggregates, dimensions)
     # print m
     # print m[0,:].sum(), xip[0]
 
@@ -150,7 +154,7 @@ if __name__ == '__main__':
     dimensions = [[0], [1], [2], [0, 1], [1, 2]]
 
     for inc in range(10):
-        m = ipfn().ipfn_np(m, aggregates, dimensions)
+        m = ipfn_np(m, aggregates, dimensions)
     print xijp[0,0]
     print m[0, 0, :].sum()
 
@@ -219,7 +223,7 @@ if __name__ == '__main__':
     # [0, 1], [1, 2], [2, 3], [0, 3]]
     #
     # for inc in range(30):
-    #     m = ipfn().ipfn_np(m, aggregates, dimensions)
+    #     m = ipfn_np(m, aggregates, dimensions)
     #
     # print m
     # print xpjkl[2,1,2], m[:,2,1,2].sum()
@@ -253,7 +257,7 @@ if __name__ == '__main__':
     # xpj.loc[4] = 14
     #
     # for inc in range(10):
-    #     df = ipfn().ipfn_df(df, [xip, xpj], [['dma'], ['size']])
+    #     df = ipfn_df(df, [xip, xpj], [['dma'], ['size']])
     #
     # print df
     # print df.groupby('dma')['total'].sum(), xip
@@ -311,7 +315,7 @@ if __name__ == '__main__':
     # xpjk.loc[4] = [5, 7, 3]
     #
     # for inc in range(10):
-    #     df = ipfn().ipfn_df(df, [xipp, xpjp, xppk, xijp, xpjk],
+    #     df = ipfn_df(df, [xipp, xpjp, xppk, xijp, xpjk],
     #             [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']])
     #
     # print df
