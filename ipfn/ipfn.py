@@ -111,9 +111,15 @@ class ipfn(object):
 
             for feature in product(*feat_l):
 
-                table_update.loc[feature, 'total'] =\
-                table_current.loc[feature, 'total']*\
-                xijk.loc[feature]/tmp.loc[feature]
+                den = tmp.loc[feature]
+                if den == 0:
+                    table_update.loc[feature, 'total'] =\
+                    table_current.loc[feature, 'total']*\
+                    xijk.loc[feature]
+                else:
+                    table_update.loc[feature, 'total'] =\
+                    table_current.loc[feature, 'total']*\
+                    xijk.loc[feature]/den
 
             table_update.reset_index(inplace=True)
             table_current.reset_index(inplace=True)
