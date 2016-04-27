@@ -1,0 +1,12 @@
+Damien Forthomme (Dirguis)
+damien2227@hotmail.com
+Author, maintainer
+
+Evelyn Fu (evelynfu)
+evelynfu1990@gmail.com
+Implemented the early stop once ipfn has converged
+Improved readability of the code
+
+Gan Gao (gangao1992)
+gangao@caa.columbia.edu
+Tested code against the R package ipfp
