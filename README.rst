@@ -83,7 +83,8 @@ Finally, run the algorithm::
     print m[0, 0, :].sum()
 
 
-
+Example with the pandas version of the algorithm:
+------------------------------------------------
 In the same fashion, we can run a similar example, but using a dataframe::
 
     from ipfn import *
