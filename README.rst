@@ -4,14 +4,14 @@ ipfn
 Iterative proportional fitting is an algorithm used is many different fields such as economics or social sciences, to alter results in such a way that aggregates along one or several dimensions match known marginals (or aggregates along these same dimensions).
 
 The algorithm exists in 2 versions:
-* - numpy version, which the fastest by far: ipfn_np
-* - pandas version, which is much slower but easier to use than the numpy version: ipfn_df
+*   - numpy version, which the fastest by far: ipfn_np
+*   - pandas version, which is much slower but easier to use than the numpy version: ipfn_df
 
 The pandas version is suitable on only smaller problems.
 
 For more information and examples, please visit:
-* - `wikipedia page on ipf <https://en.wikipedia.org/wiki/Iterative_proportional_fitting>`_
-* - `slides explaining the methodology and links to specific examples <http://www.demog.berkeley.edu/~eddieh/IPFDescription/AKDOLWDIPFTWOD.pdf>`_
+*   - `wikipedia page on ipf <https://en.wikipedia.org/wiki/Iterative_proportional_fitting>`_
+*   - `slides explaining the methodology and links to specific examples <http://www.demog.berkeley.edu/~eddieh/IPFDescription/AKDOLWDIPFTWOD.pdf>`_
 
 ----
 
