@@ -15,9 +15,9 @@ The algorithm recognizes the input variable type and and uses the appropriate ve
 
 For more information and examples, please visit:
 
-*   https://github.com/Dirguis/ipfn
 *   `wikipedia page on ipf <https://en.wikipedia.org/wiki/Iterative_proportional_fitting>`_
 *   `slides explaining the methodology and links to specific examples <http://www.demog.berkeley.edu/~eddieh/IPFDescription/AKDOLWDIPFTWOD.pdf>`_
+*   https://github.com/Dirguis/ipfn
 
 ----
 
