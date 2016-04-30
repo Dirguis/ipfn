@@ -15,6 +15,7 @@ The algorithm recognizes the input variable type and and uses the appropriate ve
 
 For more information and examples, please visit:
 
+*   https://github.com/Dirguis/ipfn
 *   `wikipedia page on ipf <https://en.wikipedia.org/wiki/Iterative_proportional_fitting>`_
 *   `slides explaining the methodology and links to specific examples <http://www.demog.berkeley.edu/~eddieh/IPFDescription/AKDOLWDIPFTWOD.pdf>`_
 
@@ -157,7 +158,7 @@ In the same fashion, we can run a similar example, but using a dataframe::
 Added notes:
 ------------
 
-Several examples, using the numpy or pandas version of the algorithm are listed in the script [ipfn](https://github.com/Dirguis/ipfn.git) and `ipfn.py <https://github.com/Dirguis/ipfn.git>`_. Comment, uncomment to parts of interests and run the script::
+Several examples, using the numpy or pandas version of the algorithm are listed in the script `ipfn.py <https://github.com/Dirguis/ipfn.git>`_. Comment, uncomment to parts of interests and run the script::
 
     python ipfn.py
 
