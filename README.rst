@@ -5,10 +5,13 @@ Iterative proportional fitting is an algorithm used is many different fields suc
 
 The algorithm exists in 2 versions:
 
-*   numpy version, which the fastest by far: ipfn_np
-*   pandas version, which is much slower but easier to use than the numpy version: ipfn_df
+*   numpy version, which the fastest by far
+*   pandas version, which is much slower but easier to use than the numpy version
 
-The pandas version is suitable on only smaller problems.
+
+The algorithm recognizes the input variable type and and uses the appropriate version to solve the problem. To install the package:
+
+*   pip install ipfn
 
 For more information and examples, please visit:
 
@@ -141,10 +144,12 @@ In the same fashion, we can run a similar example, but using a dataframe::
     xpjk.loc[2] = [8, 12, 10]
     xpjk.loc[3] = [15, 12, 8]
     xpjk.loc[4] = [5, 7, 3]
+    
+    aggregates = [xipp, xpjp, xppk, xijp, xpjk]
+    dimensions = [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']]
 
-    ipfn_df = ipfn(df, [xipp, xpjp, xppk, xijp, xpjk],
-            [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']])
-    df = ipfn_df.iteration()
+    IPF = ipfn(df, aggregates, dimensions)
+    df = IPF.iteration()
 
     print df
     print df.groupby('size')['total'].sum(), xpjp
