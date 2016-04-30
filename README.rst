@@ -157,7 +157,7 @@ In the same fashion, we can run a similar example, but using a dataframe::
 Added notes:
 ------------
 
-Several examples, using the numpy or pandas version of the algorithm are listed in the script `ipfn.py <https://github.com/Dirguis/ipfn.git>`_. Comment, uncomment to parts of interests and run the script::
+Several examples, using the numpy or pandas version of the algorithm are listed in the script [ipfn](https://github.com/Dirguis/ipfn.git) and `ipfn.py <https://github.com/Dirguis/ipfn.git>`_. Comment, uncomment to parts of interests and run the script::
 
     python ipfn.py
 
