@@ -17,6 +17,7 @@ For more information and examples, please visit:
 
 *   `wikipedia page on ipf <https://en.wikipedia.org/wiki/Iterative_proportional_fitting>`_
 *   `slides explaining the methodology and links to specific examples <http://www.demog.berkeley.edu/~eddieh/IPFDescription/AKDOLWDIPFTWOD.pdf>`_
+*   https://github.com/Dirguis/ipfn
 
 ----
 
