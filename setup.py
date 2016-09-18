@@ -74,7 +74,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=['pandas', 'numpy'],
 
-    platforms = ["Any"],
+    platforms=["Any"],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
