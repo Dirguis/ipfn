@@ -5,6 +5,7 @@ import sys
 from itertools import product
 import copy
 
+
 class ipfn(object):
 
     def __init__(self, original, aggregates, dimensions, convergence_rate=0.0001, max_iteration=100):
@@ -39,10 +40,10 @@ class ipfn(object):
         # Calculate the new weights for each dimension
         for inc in range(steps):
             if inc == (steps-1):
-                table_update  = m
+                table_update = m
                 table_current = tables[inc]
             else:
-                table_update  = tables[inc+1]
+                table_update = tables[inc+1]
                 table_current = tables[inc]
             for dimension in dimensions[inc]:
                 product_elem.append(range(m.shape[dimension]))
@@ -94,13 +95,13 @@ class ipfn(object):
         inc = 0
         for features in dimensions:
             if inc == (steps-1):
-                table_update  = df
+                table_update = df
                 table_current = tables[inc]
             else:
-                table_update  = tables[inc+1]
+                table_update = tables[inc+1]
                 table_current = tables[inc]
 
-            tmp  = table_current.groupby(features)['total'].sum()
+            tmp = table_current.groupby(features)['total'].sum()
             xijk = aggregates[inc]
 
             feat_l = []
@@ -114,12 +115,12 @@ class ipfn(object):
                 den = tmp.loc[feature]
                 if den == 0:
                     table_update.loc[feature, 'total'] =\
-                    table_current.loc[feature, 'total']*\
-                    xijk.loc[feature]
+                        table_current.loc[feature, 'total'] *\
+                        xijk.loc[feature]
                 else:
                     table_update.loc[feature, 'total'] =\
-                    table_current.loc[feature, 'total']*\
-                    xijk.loc[feature]/den
+                        table_current.loc[feature, 'total'] *\
+                        xijk.loc[feature]/den
 
             table_update.reset_index(inplace=True)
             table_current.reset_index(inplace=True)
@@ -163,8 +164,6 @@ class ipfn(object):
         return m
 
 if __name__ == '__main__':
-
-
     # Example 1, 2D using ipfn_np, link: http://www.real-statistics.com/matrices-and-iterative-procedures/iterative-proportional-fitting-procedure-ipfp/
     # m = np.array([[8., 4., 6., 7.], [3., 6., 5., 2.], [9., 11., 3., 1.]], )
     # xip = np.array([20., 18., 22.])
@@ -177,7 +176,6 @@ if __name__ == '__main__':
     #
     # print m
     # print m[0,:].sum(), xip[0]
-
 
     # Example 2, 3D using ipfn_np, link: http://www.demog.berkeley.edu/~eddieh/IPFDescription/AKDOLWDIPFTHREED.pdf
     # There is a link to a excel file with the example if interested
@@ -221,8 +219,6 @@ if __name__ == '__main__':
     # m = IPF.iteration()
     # print m
     # print m[0, 0, :].sum()
-
-
 
     # Example 3, 4D using ipfn_np, link: http://www.demog.berkeley.edu/~eddieh/IPFDescription/AKDOLWDIPFFOURD.pdf
     # made up example
@@ -294,9 +290,6 @@ if __name__ == '__main__':
     # print xpjpp[1], m[:,1,:,:].sum()
     # print xppkl[0, 2], m[:,:,0,2].sum()
 
-
-
-
     # Example 2D with ipfn_df
     # m      = np.array([8., 4., 6., 7., 3., 6., 5., 2., 9., 11., 3., 1.], )
     # dma_l  = [501, 501, 501, 501, 502, 502, 502, 502, 505, 505, 505, 505]
@@ -327,24 +320,22 @@ if __name__ == '__main__':
     # print df
     # print df.groupby('dma')['total'].sum(), xip
 
-
-
     # # Example 3D with ipfn_df
-    m      = np.array([1., 2., 1., 3., 5., 5., 6., 2., 2., 1., 7., 2.,
-                   5., 4., 2., 5., 5., 5., 3., 8., 7., 2., 7., 6.], )
-    dma_l  = [501, 501, 501, 501, 501, 501, 501, 501, 501, 501, 501, 501,
-              502, 502, 502, 502, 502, 502, 502, 502, 502, 502, 502, 502]
+    m = np.array([1., 2., 1., 3., 5., 5., 6., 2., 2., 1., 7., 2.,
+                  5., 4., 2., 5., 5., 5., 3., 8., 7., 2., 7., 6.], )
+    dma_l = [501, 501, 501, 501, 501, 501, 501, 501, 501, 501, 501, 501,
+             502, 502, 502, 502, 502, 502, 502, 502, 502, 502, 502, 502]
     size_l = [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
               1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4]
 
-    age_l  = ['20-25','30-35','40-45',
-              '20-25','30-35','40-45',
-              '20-25','30-35','40-45',
-              '20-25','30-35','40-45',
-              '20-25','30-35','40-45',
-              '20-25','30-35','40-45',
-              '20-25','30-35','40-45',
-              '20-25','30-35','40-45']
+    age_l = ['20-25', '30-35', '40-45',
+             '20-25', '30-35', '40-45',
+             '20-25', '30-35', '40-45',
+             '20-25', '30-35', '40-45',
+             '20-25', '30-35', '40-45',
+             '20-25', '30-35', '40-45',
+             '20-25', '30-35', '40-45',
+             '20-25', '30-35', '40-45']
 
     df = pd.DataFrame()
     df['dma'] = dma_l
@@ -380,7 +371,7 @@ if __name__ == '__main__':
     xpjk.loc[4] = [5, 7, 3]
 
     ipfn_df = ipfn(df, [xipp, xpjp, xppk, xijp, xpjk],
-            [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']])
+                   [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']])
     df = ipfn_df.iteration()
 
     print df
