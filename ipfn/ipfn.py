@@ -8,12 +8,13 @@ import copy
 
 class ipfn(object):
 
-    def __init__(self, original, aggregates, dimensions, convergence_rate=0.0001, max_iteration=100):
+    def __init__(self, original, aggregates, dimensions, convergence_rate=0.0001, max_iteration=500, verbose=0):
         self.original = original
         self.aggregates = aggregates
         self.dimensions = dimensions
         self.conv_rate = convergence_rate
         self.max_itr = max_iteration
+        self.verbose = verbose
 
     @staticmethod
     def index_axis_elem(dims, axes, elems):
@@ -33,6 +34,8 @@ class ipfn(object):
         dim = len(m.shape)
         product_elem = []
         tables = [m]
+        # TODO: do we need to persist all these dataframe? Or maybe we just need to persist the table_update and table_current
+        # and then update the table_current to the table_update to the latest we have. And create an empty zero dataframe for table_update (Evelyn)
         for inc in range(steps-1):
             tables.append(np.array(np.zeros(m.shape)))
         original = copy.copy(m)
@@ -51,12 +54,17 @@ class ipfn(object):
                 idx = self.index_axis_elem(dim, dimensions[inc], item)
                 table_current_slice = table_current[idx]
                 mijk = table_current_slice.sum()
+                # TODO: Directly put it as xijk = aggregates[inc][item] (Evelyn)
                 xijk = aggregates[inc]
                 xijk = xijk[item]
                 if mijk == 0:
                     # table_current_slice += 1e-5
-                    table_update[idx] = table_current_slice*1.0*xijk
+                    # TODO: Basically, this part would remain 0 as always right? Cause if the sum of the slice is zero, then we only have zeros in this slice.
+                    # TODO: you could put it as table_update[idx] = table_current_slice (since multiplication on zero is still zero)
+                    table_update[idx] = table_current_slice
                 else:
+                    # TODO: when inc == steps - 1, this part is also directly updating the dataframe m (Evelyn)
+                    # If we are not going to persist every table generated, we could still keep this part to directly update dataframe m
                     table_update[idx] = table_current_slice*1.0*xijk/mijk
                 # For debug purposes
                 # if np.isnan(table_update).any():
@@ -67,6 +75,7 @@ class ipfn(object):
         # Check the convergence rate for each dimension
         max_conv = 0
         for inc in range(steps):
+            # TODO: this part already generated before, we could somehow persist it. But it's not important (Evelyn)
             for dimension in dimensions[inc]:
                 product_elem.append(range(m.shape[dimension]))
             for item in product(*product_elem):
@@ -83,6 +92,7 @@ class ipfn(object):
 
         return m, max_conv
 
+    # TODO: Should we still keep this function as we no longer using dataframe version? (Evelyn)
     def ipfn_df(self, df, aggregates, dimensions):
 
         steps = len(aggregates)
@@ -153,18 +163,31 @@ class ipfn(object):
                 # print i, conv
         # If the original data input is in numpy format
         elif isinstance(self.original, np.ndarray):
+            self.original = self.original.astype('float64')
             while i <= self.max_itr and conv > self.conv_rate:
                 m, conv = self.ipfn_np(m, self.aggregates, self.dimensions)
                 i += 1
                 # print i, conv
+        converged = 1
         if i <= self.max_itr:
             print 'ipfn converged'
         else:
             print 'Maximum iterations reached'
-        return m
+            converged = 0
+
+        # Handle the verbose
+        if self.verbose == 0:
+            return m
+        elif self.verbose == 1:
+            return m, converged
+        else:
+            print 'wrong verbose input, return None'
+            sys.exit(0)
 
 if __name__ == '__main__':
-    # Example 1, 2D using ipfn_np, link: http://www.real-statistics.com/matrices-and-iterative-procedures/iterative-proportional-fitting-procedure-ipfp/
+
+    # Example 1, 2D using ipfn_np,
+    # link: http://www.real-statistics.com/matrices-and-iterative-procedures/iterative-proportional-fitting-procedure-ipfp/
     # m = np.array([[8., 4., 6., 7.], [3., 6., 5., 2.], [9., 11., 3., 1.]], )
     # xip = np.array([20., 18., 22.])
     # xpj = np.array([18., 16., 12., 14.])
