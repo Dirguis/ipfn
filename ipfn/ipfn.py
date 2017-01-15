@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import numpy as np
 import pandas as pd
 import sys
@@ -68,7 +69,7 @@ class ipfn(object):
                     table_update[idx] = table_current_slice*1.0*xijk/mijk
                 # For debug purposes
                 # if np.isnan(table_update).any():
-                #     print idx
+                #     print(idx)
                 #     sys.exit(0)
             product_elem = []
 
@@ -84,7 +85,7 @@ class ipfn(object):
                 ori_ijk = ori_slice.sum()
                 m_slice = m[idx]
                 m_ijk = m_slice.sum()
-                # print 'Current vs original', abs(m_ijk/ori_ijk - 1)
+                # print('Current vs original', abs(m_ijk/ori_ijk - 1))
                 if abs(m_ijk/ori_ijk - 1) > max_conv:
                     max_conv = abs(m_ijk/ori_ijk - 1)
 
@@ -160,19 +161,19 @@ class ipfn(object):
             while i <= self.max_itr and conv > self.conv_rate:
                 m, conv = self.ipfn_df(m, self.aggregates, self.dimensions)
                 i += 1
-                # print i, conv
+                # print(i, conv)
         # If the original data input is in numpy format
         elif isinstance(self.original, np.ndarray):
             self.original = self.original.astype('float64')
             while i <= self.max_itr and conv > self.conv_rate:
                 m, conv = self.ipfn_np(m, self.aggregates, self.dimensions)
                 i += 1
-                # print i, conv
+                # print(i, conv)
         converged = 1
         if i <= self.max_itr:
-            print 'ipfn converged'
+            print('ipfn converged')
         else:
-            print 'Maximum iterations reached'
+            print('Maximum iterations reached')
             converged = 0
 
         # Handle the verbose
@@ -181,7 +182,7 @@ class ipfn(object):
         elif self.verbose == 1:
             return m, converged
         else:
-            print 'wrong verbose input, return None'
+            print('wrong verbose input, return None')
             sys.exit(0)
 
 if __name__ == '__main__':
@@ -197,8 +198,8 @@ if __name__ == '__main__':
     # IPF = ipfn(m, aggregates, dimensions)
     # m = IPF.iteration()
     #
-    # print m
-    # print m[0,:].sum(), xip[0]
+    # print(m)
+    # print(m[0,:].sum(), xip[0])
 
     # Example 2, 3D using ipfn_np, link: http://www.demog.berkeley.edu/~eddieh/IPFDescription/AKDOLWDIPFTHREED.pdf
     # There is a link to a excel file with the example if interested
@@ -240,8 +241,8 @@ if __name__ == '__main__':
     #
     # IPF = ipfn(m, aggregates, dimensions)
     # m = IPF.iteration()
-    # print m
-    # print m[0, 0, :].sum()
+    # print(m)
+    # print(m[0, 0, :].sum())
 
     # Example 3, 4D using ipfn_np, link: http://www.demog.berkeley.edu/~eddieh/IPFDescription/AKDOLWDIPFFOURD.pdf
     # made up example
@@ -308,10 +309,10 @@ if __name__ == '__main__':
     # IPF = ipfn(m, aggregates, dimensions)
     # m = IPF.iteration()
     #
-    # print m
-    # print xpjkl[2,1,2], m[:,2,1,2].sum()
-    # print xpjpp[1], m[:,1,:,:].sum()
-    # print xppkl[0, 2], m[:,:,0,2].sum()
+    # print(m)
+    # print(xpjkl[2,1,2], m[:,2,1,2].sum())
+    # print(xpjpp[1], m[:,1,:,:].sum())
+    # print(xppkl[0, 2], m[:,:,0,2].sum())
 
     # Example 2D with ipfn_df
     # m      = np.array([8., 4., 6., 7., 3., 6., 5., 2., 9., 11., 3., 1.], )
@@ -340,8 +341,8 @@ if __name__ == '__main__':
     #         [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']])
     # df = ipfn_df.iteration()
     #
-    # print df
-    # print df.groupby('dma')['total'].sum(), xip
+    # print(df)
+    # print(df.groupby('dma')['total'].sum(), xip)
 
     # # Example 3D with ipfn_df
     m = np.array([1., 2., 1., 3., 5., 5., 6., 2., 2., 1., 7., 2.,
@@ -397,5 +398,5 @@ if __name__ == '__main__':
                    [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']])
     df = ipfn_df.iteration()
 
-    print df
-    print df.groupby('size')['total'].sum(), xpjp
+    print(df)
+    print(df.groupby('size')['total'].sum(), xpjp)
