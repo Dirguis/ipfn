@@ -226,7 +226,7 @@ class ipfn(object):
         elif isinstance(self.original, np.ndarray):
             self.original = self.original.astype('float64')
             while i <= self.max_itr and conv > self.conv_rate:
-                m, conv = self.ipfn_np(m, self.aggregates, self.dimensions)
+                m, conv = self.ipfn_np(m, self.aggregates, self.dimensions, self.weight_col)
                 i += 1
                 # print(i, conv)
         converged = 1
