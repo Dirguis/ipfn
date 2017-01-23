@@ -11,6 +11,17 @@ class ipfn(object):
 
     def __init__(self, original, aggregates, dimensions, weight_col='total',
                  convergence_rate=0.0001, max_iteration=500, verbose=0):
+        """
+        Initialize the ipfn class
+        original: numpy darray matrix or dataframe to perform the ipfn on.
+        aggregates: list of numpy array or darray or pandas dataframe/series. The aggregates are the same as the marginals. They are the target values that we want along one or several axis when aggregating along one or several axes.
+        dimensions: list of lists with integers if working with numpy objects, or column names if working with pandas objects. Preserved dimensions along which we sum to get the corresponding aggregates.
+        convergence_rate: if there are many aggregates/marginal, it could be useful to loosen the convergence criterion.
+        max_iteration: Integer. Maximum number of iterations allowed.
+        verbose: interger 0 or 1. Returns 1 if the ipfn successfully converged, 0 otherwise.
+
+        For examples, please open the ipfn script or look for help on functions ipfn_np and ipfn_df
+        """
         self.original = original
         self.aggregates = aggregates
         self.dimensions = dimensions
@@ -33,6 +44,20 @@ class ipfn(object):
         return idx
 
     def ipfn_np(self, m, aggregates, dimensions, weight_col='total'):
+        """
+        Runs the ipfn method from a matrix m, aggregates/marginals and the dimension(s) preserved.
+        For example:
+        from ipfn import ipfn
+        import numpy as np
+        m = np.array([[8., 4., 6., 7.], [3., 6., 5., 2.], [9., 11., 3., 1.]], )
+        xip = np.array([20., 18., 22.])
+        xpj = np.array([18., 16., 12., 14.])
+        aggregates = [xip, xpj]
+        dimensions = [[0], [1]]
+
+        IPF = ipfn(m, aggregates, dimensions)
+        m = IPF.iteration()
+        """
         steps = len(aggregates)
         dim = len(m.shape)
         product_elem = []
@@ -96,6 +121,36 @@ class ipfn(object):
         return m, max_conv
 
     def ipfn_df(self, df, aggregates, dimensions, weight_col='total'):
+        """
+        Runs the ipfn method from a dataframe df, aggregates/marginals and the dimension(s) preserved.
+        For example:
+        from ipfn import ipfn
+        import pandas as pd
+        age = [30, 30, 30, 30, 40, 40, 40, 40, 50, 50, 50, 50]
+        distance = [10,20,30,40,10,20,30,40,10,20,30,40]
+        m = [8., 4., 6., 7., 3., 6., 5., 2., 9., 11., 3., 1.]
+        df = pd.DataFrame()
+        df['age'] = age
+        df['distance'] = distance
+        df['total'] = m
+
+        xip = df.groupby('age')['total'].sum()
+        xip.loc[30] = 20
+        xip.loc[40] = 18
+        xip.loc[50] = 22
+        xpj = df.groupby('distance')['total'].sum()
+        xpj.loc[10] = 18
+        xpj.loc[20] = 16
+        xpj.loc[30] = 12
+        xpj.loc[40] = 14
+        dimensions = [['age'], ['distance']]
+        aggregates = [xip, xpj]
+
+        IPF = ipfn(df, aggregates, dimensions)
+        df = IPF.iteration()
+
+        print(df)
+        print(df.groupby('age')['total'].sum(), xip)"""
 
         steps = len(aggregates)
         tables = [df]
@@ -153,6 +208,10 @@ class ipfn(object):
         return df, max_conv
 
     def iteration(self):
+        """
+        Runs the ipfn algorithm. Automatically detects of working with numpy ndarray or pandas dataframes.
+        """
+
         i = 0
         conv = self.conv_rate * 100
         m = self.original
