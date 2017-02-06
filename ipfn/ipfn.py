@@ -198,7 +198,7 @@ class ipfn(object):
         inc = 0
         for features in dimensions:
             tmp = df.groupby(features)['total'].sum()
-            ori_ijk = original.groupby(features)['total'].sum()
+            ori_ijk = aggregates[inc]
             temp_conv = max(abs(tmp/ori_ijk - 1))
             if temp_conv > max_conv:
                 max_conv = temp_conv
