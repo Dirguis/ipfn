@@ -9,7 +9,8 @@ import copy
 
 class ipfn(object):
 
-    def __init__(self, original, aggregates, dimensions, convergence_rate=0.0001, max_iteration=500, verbose=0):
+    def __init__(self, original, aggregates, dimensions, weight_col='total',
+                 convergence_rate=0.0001, max_iteration=500, verbose=0):
         """
         Initialize the ipfn class
         original: numpy darray matrix or dataframe to perform the ipfn on.
@@ -24,6 +25,7 @@ class ipfn(object):
         self.original = original
         self.aggregates = aggregates
         self.dimensions = dimensions
+        self.weight_col = weight_col
         self.conv_rate = convergence_rate
         self.max_itr = max_iteration
         self.verbose = verbose
@@ -41,7 +43,7 @@ class ipfn(object):
                     idx += (np.s_[:],)
         return idx
 
-    def ipfn_np(self, m, aggregates, dimensions):
+    def ipfn_np(self, m, aggregates, dimensions, weight_col='total'):
         """
         Runs the ipfn method from a matrix m, aggregates/marginals and the dimension(s) preserved.
         For example:
@@ -118,8 +120,7 @@ class ipfn(object):
 
         return m, max_conv
 
-    # TODO: Should we still keep this function as we no longer using dataframe version? (Evelyn)
-    def ipfn_df(self, df, aggregates, dimensions):
+    def ipfn_df(self, df, aggregates, dimensions, weight_col='total'):
         """
         Runs the ipfn method from a dataframe df, aggregates/marginals and the dimension(s) preserved.
         For example:
@@ -167,7 +168,7 @@ class ipfn(object):
                 table_update = tables[inc+1]
                 table_current = tables[inc]
 
-            tmp = table_current.groupby(features)['total'].sum()
+            tmp = table_current.groupby(features)[weight_col].sum()
             xijk = aggregates[inc]
 
             feat_l = []
@@ -177,15 +178,15 @@ class ipfn(object):
             table_current.set_index(features, inplace=True)
 
             for feature in product(*feat_l):
-
                 den = tmp.loc[feature]
+                # calculate new weight for this iteration
                 if den == 0:
-                    table_update.loc[feature, 'total'] =\
-                        table_current.loc[feature, 'total'] *\
+                    table_update.loc[feature, weight_col] =\
+                        table_current.loc[feature, weight_col] *\
                         xijk.loc[feature]
                 else:
-                    table_update.loc[feature, 'total'] =\
-                        table_current.loc[feature, 'total'] *\
+                    table_update.loc[feature, weight_col] = \
+                        table_current.loc[feature, weight_col].astype(float) * \
                         xijk.loc[feature]/den
 
             table_update.reset_index(inplace=True)
@@ -197,8 +198,8 @@ class ipfn(object):
         max_conv = 0
         inc = 0
         for features in dimensions:
-            tmp = df.groupby(features)['total'].sum()
-            ori_ijk = original.groupby(features)['total'].sum()
+            tmp = df.groupby(features)[weight_col].sum()
+            ori_ijk = original.groupby(features)[weight_col].sum()
             temp_conv = max(abs(tmp/ori_ijk - 1))
             if temp_conv > max_conv:
                 max_conv = temp_conv
@@ -218,14 +219,14 @@ class ipfn(object):
         # If the original data input is in pandas DataFrame format
         if isinstance(self.original, pd.DataFrame):
             while i <= self.max_itr and conv > self.conv_rate:
-                m, conv = self.ipfn_df(m, self.aggregates, self.dimensions)
+                m, conv = self.ipfn_df(m, self.aggregates, self.dimensions, self.weight_col)
                 i += 1
                 # print(i, conv)
         # If the original data input is in numpy format
         elif isinstance(self.original, np.ndarray):
             self.original = self.original.astype('float64')
             while i <= self.max_itr and conv > self.conv_rate:
-                m, conv = self.ipfn_np(m, self.aggregates, self.dimensions)
+                m, conv = self.ipfn_np(m, self.aggregates, self.dimensions, self.weight_col)
                 i += 1
                 # print(i, conv)
         converged = 1
@@ -397,7 +398,7 @@ if __name__ == '__main__':
     # xpj.loc[4] = 14
     #
     # ipfn_df = ipfn(df, [xipp, xpjp, xppk, xijp, xpjk],
-    #         [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']])
+    #         [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']], 'total')
     # df = ipfn_df.iteration()
     #
     # print(df)
@@ -454,7 +455,7 @@ if __name__ == '__main__':
     xpjk.loc[4] = [5, 7, 3]
 
     ipfn_df = ipfn(df, [xipp, xpjp, xppk, xijp, xpjk],
-                   [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']])
+                   [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']], 'total')
     df = ipfn_df.iteration()
 
     print(df)
