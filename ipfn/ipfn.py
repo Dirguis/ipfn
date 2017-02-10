@@ -199,7 +199,7 @@ class ipfn(object):
         inc = 0
         for features in dimensions:
             tmp = df.groupby(features)[weight_col].sum()
-            ori_ijk = original.groupby(features)[weight_col].sum()
+            ori_ijk = aggregates[inc]
             temp_conv = max(abs(tmp/ori_ijk - 1))
             if temp_conv > max_conv:
                 max_conv = temp_conv
@@ -397,8 +397,8 @@ if __name__ == '__main__':
     # xpj.loc[3] = 12
     # xpj.loc[4] = 14
     #
-    # ipfn_df = ipfn(df, [xipp, xpjp, xppk, xijp, xpjk],
-    #         [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']], 'total')
+    # ipfn_df = ipfn.ipfn(df, [xip, xpj],
+    #         [['dma'], ['size']])
     # df = ipfn_df.iteration()
     #
     # print(df)
