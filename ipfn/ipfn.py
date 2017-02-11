@@ -108,8 +108,7 @@ class ipfn(object):
                 product_elem.append(range(m.shape[dimension]))
             for item in product(*product_elem):
                 idx = self.index_axis_elem(dim, dimensions[inc], item)
-                ori_slice = original[idx]
-                ori_ijk = ori_slice.sum()
+                ori_ijk = aggregates[inc][item]
                 m_slice = m[idx]
                 m_ijk = m_slice.sum()
                 # print('Current vs original', abs(m_ijk/ori_ijk - 1))
