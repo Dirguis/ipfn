@@ -197,7 +197,11 @@ class ipfn(object):
         max_conv = 0
         inc = 0
         for features in dimensions:
+<<<<<<< HEAD
             tmp = table_update.groupby(features)['total'].sum()
+=======
+            tmp = df.groupby(features)['total'].sum()
+>>>>>>> 6f5c482... Fix convergence issue
             ori_ijk = aggregates[inc]
             temp_conv = max(abs(tmp/ori_ijk - 1))
             if temp_conv > max_conv:
