@@ -9,7 +9,8 @@ import copy
 
 class ipfn(object):
 
-    def __init__(self, original, aggregates, dimensions, convergence_rate=0.0001, max_iteration=500, verbose=0):
+    def __init__(self, original, aggregates, dimensions, 
+                 convergence_rate=0.0001, max_iteration=500, verbose=0):
         """
         Initialize the ipfn class
         original: numpy darray matrix or dataframe to perform the ipfn on.
@@ -118,7 +119,6 @@ class ipfn(object):
 
         return m, max_conv
 
-    # TODO: Should we still keep this function as we no longer using dataframe version? (Evelyn)
     def ipfn_df(self, df, aggregates, dimensions):
         """
         Runs the ipfn method from a dataframe df, aggregates/marginals and the dimension(s) preserved.
@@ -151,60 +151,20 @@ class ipfn(object):
         print(df)
         print(df.groupby('age')['total'].sum(), xip)"""
 
-        steps = len(aggregates)
-        tables = [df]
-        for inc in range(steps-1):
-            tables.append(df.copy())
-        original = df.copy()
+        s = m.copy()
+        aggrs = self.aggregates
+        factors = []
 
-        # Calculate the new weights for each dimension
-        inc = 0
-        for features in dimensions:
-            if inc == (steps-1):
-                table_update = df
-                table_current = tables[inc]
-            else:
-                table_update = tables[inc+1]
-                table_current = tables[inc]
+        for d in self.dimensions:
+            sg = s.groupby(level=d).sum()
+            f = aggrs.div(sg)
+            s = s.multiply(f, fill_value=0)
+            factors.append(f)
 
-            tmp = table_current.groupby(features)['total'].sum()
-            xijk = aggregates[inc]
+        # Check for convergence
+        max_conv = max([x-1 for sublist in factors for x in sublist])
 
-            feat_l = []
-            for feature in features:
-                feat_l.append(np.unique(table_current[feature]))
-            table_update.set_index(features, inplace=True)
-            table_current.set_index(features, inplace=True)
-
-            for feature in product(*feat_l):
-
-                den = tmp.loc[feature]
-                if den == 0:
-                    table_update.loc[feature, 'total'] =\
-                        table_current.loc[feature, 'total'] *\
-                        xijk.loc[feature]
-                else:
-                    table_update.loc[feature, 'total'] =\
-                        table_current.loc[feature, 'total'] *\
-                        xijk.loc[feature]/den
-
-            table_update.reset_index(inplace=True)
-            table_current.reset_index(inplace=True)
-            inc += 1
-            feat_l = []
-
-        # Calculate the max convergence rate
-        max_conv = 0
-        inc = 0
-        for features in dimensions:
-            tmp = table_update.groupby(features)['total'].sum()
-            ori_ijk = aggregates[inc]
-            temp_conv = max(abs(tmp/ori_ijk - 1))
-            if temp_conv > max_conv:
-                max_conv = temp_conv
-            inc += 1
-
-        return df, max_conv
+        return s, max_conv
 
     def iteration(self):
         """
@@ -213,10 +173,15 @@ class ipfn(object):
 
         i = 0
         conv = self.conv_rate * 100
-        m = self.original
+        m = self.original.copy()
 
         # If the original data input is in pandas DataFrame format
         if isinstance(self.original, pd.DataFrame):
+            # Add index
+            indexcols = list(set(x for l in self.dimensions for x in l))
+            m.set_index(indexcols, inplace=True)
+            # Turn to series 
+            m = m.squeeze()
             while i <= self.max_itr and conv > self.conv_rate:
                 m, conv = self.ipfn_df(m, self.aggregates, self.dimensions)
                 i += 1
