@@ -9,7 +9,8 @@ import copy
 
 class ipfn(object):
 
-    def __init__(self, original, aggregates, dimensions, convergence_rate=0.0001, max_iteration=500, verbose=0):
+    def __init__(self, original, aggregates, dimensions, values_column='total',
+                 convergence_rate=0.0001, max_iteration=500, verbose=0):
         """
         Initialize the ipfn class
         original: numpy darray matrix or dataframe to perform the ipfn on.
@@ -24,6 +25,7 @@ class ipfn(object):
         self.original = original
         self.aggregates = aggregates
         self.dimensions = dimensions
+        self.values_column = values_column
         self.conv_rate = convergence_rate
         self.max_itr = max_iteration
         self.verbose = verbose
@@ -118,7 +120,6 @@ class ipfn(object):
 
         return m, max_conv
 
-    # TODO: Should we still keep this function as we no longer using dataframe version? (Evelyn)
     def ipfn_df(self, df, aggregates, dimensions):
         """
         Runs the ipfn method from a dataframe df, aggregates/marginals and the dimension(s) preserved.
@@ -151,72 +152,50 @@ class ipfn(object):
         print(df)
         print(df.groupby('age')['total'].sum(), xip)"""
 
-        steps = len(aggregates)
-        tables = [df]
-        for inc in range(steps-1):
-            tables.append(df.copy())
-        original = df.copy()
+        s = df.copy()
+        aggrs = self.aggregates
+        dims = self.dimensions
+        factors = []
+        index_names = df.index.names
 
-        # Calculate the new weights for each dimension
-        inc = 0
-        for features in dimensions:
-            if inc == (steps-1):
-                table_update = df
-                table_current = tables[inc]
+        for k, d in enumerate(dims):
+            sg = s.groupby(level=d).sum()
+            f = aggrs[k].div(sg)
+            # Joining on multiindexes of not same length is not implemented
+            if len(d) > 1:
+                unstack_levels = [lvl for lvl in index_names if lvl not in d]
+                rem_index = [lvl for lvl in index_names if lvl in d]
+                s = (s.unstack(unstack_levels)
+                      .multiply(f.reorder_levels(rem_index), axis=0)
+                      .stack(unstack_levels)
+                      .reorder_levels(index_names))
             else:
-                table_update = tables[inc+1]
-                table_current = tables[inc]
+                s = s.multiply(f, fill_value=0)
 
-            tmp = table_current.groupby(features)['total'].sum()
-            xijk = aggregates[inc]
+            f = f.sub(1).abs().max()
+            factors.append(f)
+        # Check for convergence
+        max_conv = max(factors)
 
-            feat_l = []
-            for feature in features:
-                feat_l.append(np.unique(table_current[feature]))
-            table_update.set_index(features, inplace=True)
-            table_current.set_index(features, inplace=True)
-
-            for feature in product(*feat_l):
-
-                den = tmp.loc[feature]
-                if den == 0:
-                    table_update.loc[feature, 'total'] =\
-                        table_current.loc[feature, 'total'] *\
-                        xijk.loc[feature]
-                else:
-                    table_update.loc[feature, 'total'] =\
-                        table_current.loc[feature, 'total'] *\
-                        xijk.loc[feature]/den
-
-            table_update.reset_index(inplace=True)
-            table_current.reset_index(inplace=True)
-            inc += 1
-            feat_l = []
-
-        # Calculate the max convergence rate
-        max_conv = 0
-        inc = 0
-        for features in dimensions:
-            tmp = table_update.groupby(features)['total'].sum()
-            ori_ijk = aggregates[inc]
-            temp_conv = max(abs(tmp/ori_ijk - 1))
-            if temp_conv > max_conv:
-                max_conv = temp_conv
-            inc += 1
-
-        return df, max_conv
+        return s, max_conv
 
     def iteration(self):
         """
-        Runs the ipfn algorithm. Automatically detects of working with numpy ndarray or pandas dataframes.
+        Runs the ipfn algorithm. Automatically detects of working with
+        numpy ndarray or pandas dataframes.
         """
 
         i = 0
         conv = self.conv_rate * 100
-        m = self.original
+        m = self.original.copy()
 
         # If the original data input is in pandas DataFrame format
         if isinstance(self.original, pd.DataFrame):
+            # Add index
+            indexcols = list(set(x for l in self.dimensions for x in l))
+            m.set_index(indexcols, inplace=True)
+            # Turn to series
+            m = m[self.values_column]
             while i <= self.max_itr and conv > self.conv_rate:
                 m, conv = self.ipfn_df(m, self.aggregates, self.dimensions)
                 i += 1
@@ -228,6 +207,10 @@ class ipfn(object):
                 m, conv = self.ipfn_np(m, self.aggregates, self.dimensions)
                 i += 1
                 # print(i, conv)
+
+        df = self.original
+        df[self.values_column] = m.values
+
         converged = 1
         if i <= self.max_itr:
             print('ipfn converged')
@@ -237,9 +220,9 @@ class ipfn(object):
 
         # Handle the verbose
         if self.verbose == 0:
-            return m
+            return df
         elif self.verbose == 1:
-            return m, converged
+            return df, converged
         else:
             print('wrong verbose input, return None')
             sys.exit(0)
@@ -454,8 +437,11 @@ if __name__ == '__main__':
     xpjk.loc[4] = [5, 7, 3]
 
     ipfn_df = ipfn(df, [xipp, xpjp, xppk, xijp, xpjk],
-                   [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']])
+                   [['dma'], ['size'], ['age'],
+                    ['dma', 'size'], ['size', 'age']])
+
     df = ipfn_df.iteration()
 
     print(df)
-    print(df.groupby('size')['total'].sum(), xpjp)
+    print(df.groupby(level='size').sum(), xpjp)
+    #print(df.groupby(level=['size','age']).sum(), xpjk)    
