@@ -194,7 +194,7 @@ class ipfn(object):
             # Add index
             indexcols = list(set(x for l in self.dimensions for x in l))
             m.set_index(indexcols, inplace=True)
-            # Turn to series 
+            # Turn to series
             m = m[self.values_column]
             while i <= self.max_itr and conv > self.conv_rate:
                 m, conv = self.ipfn_df(m, self.aggregates, self.dimensions)
@@ -207,6 +207,10 @@ class ipfn(object):
                 m, conv = self.ipfn_np(m, self.aggregates, self.dimensions)
                 i += 1
                 # print(i, conv)
+
+        df = self.original
+        df[self.values_column] = m.values
+
         converged = 1
         if i <= self.max_itr:
             print('ipfn converged')
@@ -216,9 +220,9 @@ class ipfn(object):
 
         # Handle the verbose
         if self.verbose == 0:
-            return m
+            return df
         elif self.verbose == 1:
-            return m, converged
+            return df, converged
         else:
             print('wrong verbose input, return None')
             sys.exit(0)
@@ -433,8 +437,11 @@ if __name__ == '__main__':
     xpjk.loc[4] = [5, 7, 3]
 
     ipfn_df = ipfn(df, [xipp, xpjp, xppk, xijp, xpjk],
-                   [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']])
+                   [['dma'], ['size'], ['age'],
+                    ['dma', 'size'], ['size', 'age']])
+
     df = ipfn_df.iteration()
 
+    print(df)
     print(df.groupby(level='size').sum(), xpjp)
-    print(df.groupby(level=['size','age']).sum(), xpjk)
+    #print(df.groupby(level=['size','age']).sum(), xpjk)    
