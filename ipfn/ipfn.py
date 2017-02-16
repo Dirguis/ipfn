@@ -9,7 +9,7 @@ import copy
 
 class ipfn(object):
 
-    def __init__(self, original, aggregates, dimensions, 
+    def __init__(self, original, aggregates, dimensions, values_column='total',
                  convergence_rate=0.0001, max_iteration=500, verbose=0):
         """
         Initialize the ipfn class
@@ -25,6 +25,7 @@ class ipfn(object):
         self.original = original
         self.aggregates = aggregates
         self.dimensions = dimensions
+        self.values_column = values_column
         self.conv_rate = convergence_rate
         self.max_itr = max_iteration
         self.verbose = verbose
@@ -151,24 +152,37 @@ class ipfn(object):
         print(df)
         print(df.groupby('age')['total'].sum(), xip)"""
 
-        s = m.copy()
+        s = df.copy()
         aggrs = self.aggregates
+        dims = self.dimensions
         factors = []
+        index_names = df.index.names
 
-        for d in self.dimensions:
+        for k, d in enumerate(dims):
             sg = s.groupby(level=d).sum()
-            f = aggrs.div(sg)
-            s = s.multiply(f, fill_value=0)
-            factors.append(f)
+            f = aggrs[k].div(sg)
+            # Joining on multiindexes of not same length is not implemented
+            if len(d) > 1:
+                unstack_levels = [lvl for lvl in index_names if lvl not in d]
+                rem_index = [lvl for lvl in index_names if lvl in d]
+                s = (s.unstack(unstack_levels)
+                      .multiply(f.reorder_levels(rem_index), axis=0)
+                      .stack(unstack_levels)
+                      .reorder_levels(index_names))
+            else:
+                s = s.multiply(f, fill_value=0)
 
+            f = f.sub(1).abs().max()
+            factors.append(f)
         # Check for convergence
-        max_conv = max([x-1 for sublist in factors for x in sublist])
+        max_conv = max(factors)
 
         return s, max_conv
 
     def iteration(self):
         """
-        Runs the ipfn algorithm. Automatically detects of working with numpy ndarray or pandas dataframes.
+        Runs the ipfn algorithm. Automatically detects of working with
+        numpy ndarray or pandas dataframes.
         """
 
         i = 0
@@ -181,7 +195,7 @@ class ipfn(object):
             indexcols = list(set(x for l in self.dimensions for x in l))
             m.set_index(indexcols, inplace=True)
             # Turn to series 
-            m = m.squeeze()
+            m = m[self.values_column]
             while i <= self.max_itr and conv > self.conv_rate:
                 m, conv = self.ipfn_df(m, self.aggregates, self.dimensions)
                 i += 1
@@ -422,5 +436,5 @@ if __name__ == '__main__':
                    [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']])
     df = ipfn_df.iteration()
 
-    print(df)
-    print(df.groupby('size')['total'].sum(), xpjp)
+    print(df.groupby(level='size').sum(), xpjp)
+    print(df.groupby(level=['size','age']).sum(), xpjk)
