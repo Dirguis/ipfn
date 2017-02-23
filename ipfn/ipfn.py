@@ -176,7 +176,7 @@ class ipfn(object):
             factors.append(f)
         # Check for convergence
         max_conv = max(factors)
-
+        
         return s, max_conv
 
     def iteration(self):
@@ -208,8 +208,9 @@ class ipfn(object):
                 i += 1
                 # print(i, conv)
 
-        df = self.original
-        df[self.values_column] = m.values
+        #Reset to dataframe
+        m.name = self.values_column
+        df = m.reset_index()
 
         converged = 1
         if i <= self.max_itr:
@@ -443,5 +444,4 @@ if __name__ == '__main__':
     df = ipfn_df.iteration()
 
     print(df)
-    print(df.groupby(level='size').sum(), xpjp)
-    #print(df.groupby(level=['size','age']).sum(), xpjk)    
+    print(df.groupby(['size','age']).sum(), xpjk)    
