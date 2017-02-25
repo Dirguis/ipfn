@@ -9,15 +9,13 @@ import copy
 
 class ipfn(object):
 
-    def __init__(self, original, aggregates, dimensions, weight_col='total',
+    def __init__(self, original, aggregates, dimensions, ipfn_column='total',
                  convergence_rate=0.0001, max_iteration=500, verbose=0):
         """
         Initialize the ipfn class
         original: numpy darray matrix or dataframe to perform the ipfn on.
-        aggregates: list of numpy array or darray or pandas dataframe/series. The aggregates are the same as the marginals.
-        They are the target values that we want along one or several axis when aggregating along one or several axes.
-        dimensions: list of lists with integers if working with numpy objects, or column names if working with pandas objects.
-        Preserved dimensions along which we sum to get the corresponding aggregates.
+        aggregates: list of numpy array or darray or pandas dataframe/series. The aggregates are the same as the marginals. They are the target values that we want along one or several axis when aggregating along one or several axes.
+        dimensions: list of lists with integers if working with numpy objects, or column names if working with pandas objects. Preserved dimensions along which we sum to get the corresponding aggregates.
         convergence_rate: if there are many aggregates/marginal, it could be useful to loosen the convergence criterion.
         max_iteration: Integer. Maximum number of iterations allowed.
         verbose: interger 0 or 1. Returns 1 if the ipfn successfully converged, 0 otherwise.
@@ -27,7 +25,7 @@ class ipfn(object):
         self.original = original
         self.aggregates = aggregates
         self.dimensions = dimensions
-        self.weight_col = weight_col
+        self.ipfn_column = ipfn_column
         self.conv_rate = convergence_rate
         self.max_itr = max_iteration
         self.verbose = verbose
@@ -45,7 +43,7 @@ class ipfn(object):
                     idx += (np.s_[:],)
         return idx
 
-    def ipfn_np(self, m, aggregates, dimensions, weight_col='total'):
+    def ipfn_np(self, m, aggregates, dimensions):
         """
         Runs the ipfn method from a matrix m, aggregates/marginals and the dimension(s) preserved.
         For example:
@@ -110,7 +108,8 @@ class ipfn(object):
                 product_elem.append(range(m.shape[dimension]))
             for item in product(*product_elem):
                 idx = self.index_axis_elem(dim, dimensions[inc], item)
-                ori_ijk = aggregates[inc][item]
+                ori_slice = original[idx]
+                ori_ijk = ori_slice.sum()
                 m_slice = m[idx]
                 m_ijk = m_slice.sum()
                 # print('Current vs original', abs(m_ijk/ori_ijk - 1))
@@ -121,7 +120,7 @@ class ipfn(object):
 
         return m, max_conv
 
-    def ipfn_df(self, df, aggregates, dimensions, weight_col='total'):
+    def ipfn_df(self, df, aggregates, dimensions):
         """
         Runs the ipfn method from a dataframe df, aggregates/marginals and the dimension(s) preserved.
         For example:
@@ -153,83 +152,73 @@ class ipfn(object):
         print(df)
         print(df.groupby('age')['total'].sum(), xip)"""
 
-        steps = len(aggregates)
-        tables = [df]
-        for inc in range(steps-1):
-            tables.append(df.copy())
-        original = df.copy()
+        aggrs = self.aggregates
+        dims = self.dimensions
+        factors = []
+        index_names = df.index.names
 
-        # Calculate the new weights for each dimension
-        inc = 0
-        for features in dimensions:
-            if inc == (steps-1):
-                table_update = df
-                table_current = tables[inc]
+        for k, d in enumerate(dims):
+            # Group by the dimension(s)
+            dfg = df.groupby(level=d).sum()
+            # Calculate the factors for each group
+            f = aggrs[k].div(dfg, fill_value=0)
+
+            # Joining on multiindexes of not same length is not implemented
+            # Temporarily convert to same length multiindexes if required
+
+            # Apply the factors on the appropriate level
+            if len(d) > 1:
+                common_levels = [lvl for lvl in index_names if lvl not in d]
+                rem_index = [lvl for lvl in index_names if lvl in d]
+                df = (df.unstack(common_levels)
+                        .multiply(f.reorder_levels(rem_index), axis=0)
+                        .stack(common_levels)
+                        .reorder_levels(index_names))
             else:
-                table_update = tables[inc+1]
-                table_current = tables[inc]
+                df = df.multiply(f, fill_value=0)
 
-            tmp = table_current.groupby(features)[weight_col].sum()
-            xijk = aggregates[inc]
+            # Store the convergence factors
+            f = f.sub(1).abs().max()
+            factors.append(f)
 
-            feat_l = []
-            for feature in features:
-                feat_l.append(np.unique(table_current[feature]))
-            table_update.set_index(features, inplace=True)
-            table_current.set_index(features, inplace=True)
-
-            for feature in product(*feat_l):
-                den = tmp.loc[feature]
-                # calculate new weight for this iteration
-                if den == 0:
-                    table_update.loc[feature, weight_col] =\
-                        table_current.loc[feature, weight_col] *\
-                        xijk.loc[feature]
-                else:
-                    table_update.loc[feature, weight_col] = \
-                        table_current.loc[feature, weight_col].astype(float) * \
-                        xijk.loc[feature]/den
-
-            table_update.reset_index(inplace=True)
-            table_current.reset_index(inplace=True)
-            inc += 1
-            feat_l = []
-
-        # Calculate the max convergence rate
-        max_conv = 0
-        inc = 0
-        for features in dimensions:
-            tmp = df.groupby(features)[weight_col].sum()
-            ori_ijk = aggregates[inc]
-            temp_conv = max(abs(tmp/ori_ijk - 1))
-            if temp_conv > max_conv:
-                max_conv = temp_conv
-            inc += 1
+        # Check for convergence
+        max_conv = max(factors)
 
         return df, max_conv
 
     def iteration(self):
         """
-        Runs the ipfn algorithm. Automatically detects of working with numpy ndarray or pandas dataframes.
+        Runs the ipfn algorithm. Automatically detects of working with
+        numpy ndarray or pandas dataframes.
         """
 
         i = 0
         conv = self.conv_rate * 100
-        m = self.original
+        m = self.original.copy()
 
         # If the original data input is in pandas DataFrame format
         if isinstance(self.original, pd.DataFrame):
+            # Add index
+            indexcols = list(set(x for l in self.dimensions for x in l))
+            m.set_index(indexcols, inplace=True)
+            # Turn to series
+            m = m[self.ipfn_column]
             while i <= self.max_itr and conv > self.conv_rate:
-                m, conv = self.ipfn_df(m, self.aggregates, self.dimensions, self.weight_col)
+                m, conv = self.ipfn_df(m, self.aggregates, self.dimensions)
                 i += 1
                 # print(i, conv)
         # If the original data input is in numpy format
         elif isinstance(self.original, np.ndarray):
             self.original = self.original.astype('float64')
             while i <= self.max_itr and conv > self.conv_rate:
-                m, conv = self.ipfn_np(m, self.aggregates, self.dimensions, self.weight_col)
+                m, conv = self.ipfn_np(m, self.aggregates, self.dimensions)
                 i += 1
                 # print(i, conv)
+
+        # Reset to dataframe
+        m.name = self.ipfn_column
+        df = m.reset_index()
+
         converged = 1
         if i <= self.max_itr:
             print('ipfn converged')
@@ -239,13 +228,12 @@ class ipfn(object):
 
         # Handle the verbose
         if self.verbose == 0:
-            return m
+            return df
         elif self.verbose == 1:
-            return m, converged
+            return df, converged
         else:
             print('wrong verbose input, return None')
             sys.exit(0)
-
 
 if __name__ == '__main__':
 
@@ -399,8 +387,8 @@ if __name__ == '__main__':
     # xpj.loc[3] = 12
     # xpj.loc[4] = 14
     #
-    # ipfn_df = ipfn.ipfn(df, [xip, xpj],
-    #         [['dma'], ['size']])
+    # ipfn_df = ipfn(df, [xipp, xpjp, xppk, xijp, xpjk],
+    #         [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']])
     # df = ipfn_df.iteration()
     #
     # print(df)
@@ -457,8 +445,10 @@ if __name__ == '__main__':
     xpjk.loc[4] = [5, 7, 3]
 
     ipfn_df = ipfn(df, [xipp, xpjp, xppk, xijp, xpjk],
-                   [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']], 'total')
+                   [['dma'], ['size'], ['age'],
+                    ['dma', 'size'], ['size', 'age']])
+
     df = ipfn_df.iteration()
 
     print(df)
-    print(df.groupby('size')['total'].sum(), xpjp)
+    print(df.groupby(['size', 'age']).sum(), xpjk)
