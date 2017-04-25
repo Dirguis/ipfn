@@ -210,9 +210,10 @@ class ipfn(object):
                 i += 1
                 # print(i, conv)
 
-        #Reset to dataframe
-        m.name = self.values_column
-        df = m.reset_index()
+        if isinstance(self, pd.DataFrame):
+		    #Reset to dataframe
+            m.name = self.values_column
+            m = m.reset_index()
 
         converged = 1
         if i <= self.max_itr:
@@ -223,9 +224,9 @@ class ipfn(object):
 
         # Handle the verbose
         if self.verbose == 0:
-            return df
+            return m
         elif self.verbose == 1:
-            return df, converged
+            return m, converged
         else:
             print('wrong verbose input, return None')
             sys.exit(0)
