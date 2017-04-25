@@ -10,3 +10,9 @@ Improved readability of the code
 Gan Gao (gangao1992)
 gangao@caa.columbia.edu
 Tested code against the R package ipfp
+
+bklaas
+https://github.com/bklaas
+
+harisbal
+https://github.com/harisbal
