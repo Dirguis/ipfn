@@ -214,7 +214,7 @@ class ipfn(object):
             m.name = self.weight_col
             m = m.reset_index()
             m.set_index(self.original.index.names, inplace=True)
-
+            
         converged = 1
         if i <= self.max_itr:
             print('ipfn converged')
