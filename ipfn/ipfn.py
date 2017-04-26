@@ -14,8 +14,10 @@ class ipfn(object):
         """
         Initialize the ipfn class
         original: numpy darray matrix or dataframe to perform the ipfn on.
-        aggregates: list of numpy array or darray or pandas dataframe/series. The aggregates are the same as the marginals. They are the target values that we want along one or several axis when aggregating along one or several axes.
-        dimensions: list of lists with integers if working with numpy objects, or column names if working with pandas objects. Preserved dimensions along which we sum to get the corresponding aggregates.
+        aggregates: list of numpy array or darray or pandas dataframe/series. The aggregates are the same as the marginals.
+        They are the target values that we want along one or several axis when aggregating along one or several axes.
+        dimensions: list of lists with integers if working with numpy objects, or column names if working with pandas objects.
+        Preserved dimensions along which we sum to get the corresponding aggregates.
         convergence_rate: if there are many aggregates/marginal, it could be useful to loosen the convergence criterion.
         max_iteration: Integer. Maximum number of iterations allowed.
         verbose: interger 0 or 1. Returns 1 if the ipfn successfully converged, 0 otherwise.
