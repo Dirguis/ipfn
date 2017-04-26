@@ -121,7 +121,7 @@ class ipfn(object):
 
         return m, max_conv
 
-    def ipfn_df(self, df, aggregates, dimensions, weight_col='total'):
+    def ipfn_df(self, df, aggregates, dimensions):
         """
         Runs the ipfn method from a dataframe df, aggregates/marginals and the dimension(s) preserved.
         For example:
@@ -153,58 +153,37 @@ class ipfn(object):
         print(df)
         print(df.groupby('age')['total'].sum(), xip)"""
 
-        steps = len(aggregates)
-        tables = [df]
-        for inc in range(steps-1):
-            tables.append(df.copy())
-        original = df.copy()
+        aggrs = self.aggregates
+        dims = self.dimensions
+        factors = []
+        index_names = df.index.names
 
-        # Calculate the new weights for each dimension
-        inc = 0
-        for features in dimensions:
-            if inc == (steps-1):
-                table_update = df
-                table_current = tables[inc]
+        for k, d in enumerate(dims):
+            # Group by the dimension(s)
+            dfg = df.groupby(level=d).sum()
+            # Calculate the factors for each group
+            f = aggrs[k].div(dfg, fill_value=0)
+
+            # Joining on multi-indexes of not same length is not implemented
+            # Temporarily convert to same length multiindexes if required
+
+            # Apply the factors on the appropriate level
+            if len(d) > 1:
+                uncommon_levels = [lvl for lvl in index_names if lvl not in d]
+                rem_index = [lvl for lvl in index_names if lvl in d]
+                df = (df.unstack(uncommon_levels)
+                        .multiply(f.reorder_levels(rem_index), axis=0)
+                        .stack(uncommon_levels)
+                        .reorder_levels(index_names))
             else:
-                table_update = tables[inc+1]
-                table_current = tables[inc]
+                df = df.multiply(f, fill_value=0)
 
-            tmp = table_current.groupby(features)[weight_col].sum()
-            xijk = aggregates[inc]
+            # Store the convergence factors
+            f = f.sub(1).abs().max()
+            factors.append(f)
 
-            feat_l = []
-            for feature in features:
-                feat_l.append(np.unique(table_current[feature]))
-            table_update.set_index(features, inplace=True)
-            table_current.set_index(features, inplace=True)
-
-            for feature in product(*feat_l):
-                den = tmp.loc[feature]
-                # calculate new weight for this iteration
-                if den == 0:
-                    table_update.loc[feature, weight_col] =\
-                        table_current.loc[feature, weight_col] *\
-                        xijk.loc[feature]
-                else:
-                    table_update.loc[feature, weight_col] = \
-                        table_current.loc[feature, weight_col].astype(float) * \
-                        xijk.loc[feature]/den
-
-            table_update.reset_index(inplace=True)
-            table_current.reset_index(inplace=True)
-            inc += 1
-            feat_l = []
-
-        # Calculate the max convergence rate
-        max_conv = 0
-        inc = 0
-        for features in dimensions:
-            tmp = df.groupby(features)[weight_col].sum()
-            ori_ijk = aggregates[inc]
-            temp_conv = max(abs(tmp/ori_ijk - 1))
-            if temp_conv > max_conv:
-                max_conv = temp_conv
-            inc += 1
+        # Check for convergence
+        max_conv = max(factors)
 
         return df, max_conv
 
@@ -230,6 +209,12 @@ class ipfn(object):
                 m, conv = self.ipfn_np(m, self.aggregates, self.dimensions, self.weight_col)
                 i += 1
                 # print(i, conv)
+
+        if isinstance(m, pd.Dataframe):
+            # Reset to dataframe
+            m.name = self.weight_col
+            m = m.reset_index()
+
         converged = 1
         if i <= self.max_itr:
             print('ipfn converged')
