@@ -25,7 +25,7 @@ class ipfn(object):
         self.original = original
         self.aggregates = aggregates
         self.dimensions = dimensions
-        self.ipfn_column = ipfn_column
+        self.weight_col = weight_col
         self.conv_rate = convergence_rate
         self.max_itr = max_iteration
         self.verbose = verbose
