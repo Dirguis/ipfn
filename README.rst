@@ -34,9 +34,13 @@ Preserved dimensions along which we sum to get the corresponding aggregates.
   * convergence_rate: if there are many aggregates/marginal, it could be useful to loosen the convergence criterion.
   * max_iteration: Integer. Maximum number of iterations allowed.
   * verbose: integer 0, 1 or 2. Each case number includes the outputs of the previous case numbers.
+
     * 0: Updated matrix returned.
+
     * 1: Flag with the output status (0 for failure and 1 for success).
+
     * 2: dataframe with iteration numbers and convergence rate information at all steps.
+    
   * rate_tolerance: float value. If above 0.0, like 0.001, the algorithm will stop once the difference between the conv_rate variable of 2 consecutive iterations is below that specified value.
 
 Example with the numpy version of the algorithm:
