@@ -40,7 +40,7 @@ Preserved dimensions along which we sum to get the corresponding aggregates.
     * 1: Flag with the output status (0 for failure and 1 for success).
 
     * 2: dataframe with iteration numbers and convergence rate information at all steps.
-    
+
   * rate_tolerance: float value. If above 0.0, like 0.001, the algorithm will stop once the difference between the conv_rate variable of 2 consecutive iterations is below that specified value.
 
 Example with the numpy version of the algorithm:
@@ -79,20 +79,20 @@ First, let us define a matrix of N=3 dimensions, the matrix being of specific si
     m[1,3,1] = 7
     m[1,3,2] = 6
 
-Now, let us define some marginals. They all have to be less than N=3 dimensions and be consistent with the dimensions of contingency table m. For example, the marginal along the first dimension will be made of 2 elements. We want the sum of elements in m for dimensions 2 and 3 to equal the marginal::
+Now, let us define some marginals::
 
-    m[0,:,:].sum() == marginal[0]
-    m[1,:,:].sum() == marginal[1]
-
-The marginals are::
-
-    xipp = np.array([52, 48])
-    xpjp = np.array([20, 30, 35, 15])
-    xppk = np.array([35, 40, 25])
-    xijp = np.array([[9, 17, 19, 7], [11, 13, 16, 8]])
-    xpjk = np.array([[7, 9, 4], [8, 12, 10], [15, 12, 8], [5, 7, 3]])
+  xipp = np.array([52, 48])
+  xpjp = np.array([20, 30, 35, 15])
+  xppk = np.array([35, 40, 25])
+  xijp = np.array([[9, 17, 19, 7], [11, 13, 16, 8]])
+  xpjk = np.array([[7, 9, 4], [8, 12, 10], [15, 12, 8], [5, 7, 3]])
 
 I used the letter p to denote the dimension(s) being summed over
+
+For this specific example, they all have to be less than N=3 dimensions and be consistent with the dimensions of contingency table m. For example, the marginal along the first dimension will be made of 2 elements. We want the sum of elements in m for dimensions 2 and 3 to equal the marginal::
+
+    m[0,:,:].sum() == xipp[0]
+    m[1,:,:].sum() == xipp[1]
 
 Define the aggregates list and the corresponding list of dimension to indicate the algorithm which dimension(s) to sum over for each aggregate::
 
