@@ -13,15 +13,25 @@ class ipfn(object):
                  convergence_rate=0.01, max_iteration=500, verbose=0, rate_tolerance=1e-8):
         """
         Initialize the ipfn class
+
         original: numpy darray matrix or dataframe to perform the ipfn on.
+
         aggregates: list of numpy array or darray or pandas dataframe/series. The aggregates are the same as the marginals.
         They are the target values that we want along one or several axis when aggregating along one or several axes.
+
         dimensions: list of lists with integers if working with numpy objects, or column names if working with pandas objects.
         Preserved dimensions along which we sum to get the corresponding aggregates.
+
         convergence_rate: if there are many aggregates/marginal, it could be useful to loosen the convergence criterion.
+
         max_iteration: Integer. Maximum number of iterations allowed.
-        verbose: interger 0 or 1. Returns 1 if the ipfn successfully converged, 0 otherwise.
-        rate_tolerance: float value. If above 0.0, like 0.001, the algoritm will stop once the difference between the conv_rate variable of 2 consecutive iterations is below that specified value
+
+        verbose: integer 0, 1 or 2. Each case number includes the outputs of the previous case numbers.
+        0: Updated matrix returned.
+        1: Flag with the output status (0 for failure and 1 for success).
+        2: dataframe with iteration numbers and convergence rate information at all steps.
+
+        rate_tolerance: float value. If above 0.0, like 0.001, the algorithm will stop once the difference between the conv_rate variable of 2 consecutive iterations is below that specified value
 
         For examples, please open the ipfn script or look for help on functions ipfn_np and ipfn_df
         """
