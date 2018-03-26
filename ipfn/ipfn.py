@@ -10,17 +10,28 @@ import copy
 class ipfn(object):
 
     def __init__(self, original, aggregates, dimensions, weight_col='total',
-                 convergence_rate=0.0001, max_iteration=500, verbose=0):
+                 convergence_rate=0.01, max_iteration=500, verbose=0, rate_tolerance=1e-8):
         """
         Initialize the ipfn class
+
         original: numpy darray matrix or dataframe to perform the ipfn on.
+
         aggregates: list of numpy array or darray or pandas dataframe/series. The aggregates are the same as the marginals.
         They are the target values that we want along one or several axis when aggregating along one or several axes.
+
         dimensions: list of lists with integers if working with numpy objects, or column names if working with pandas objects.
         Preserved dimensions along which we sum to get the corresponding aggregates.
+
         convergence_rate: if there are many aggregates/marginal, it could be useful to loosen the convergence criterion.
+
         max_iteration: Integer. Maximum number of iterations allowed.
-        verbose: interger 0 or 1. Returns 1 if the ipfn successfully converged, 0 otherwise.
+
+        verbose: integer 0, 1 or 2. Each case number includes the outputs of the previous case numbers.
+        0: Updated matrix returned.
+        1: Flag with the output status (0 for failure and 1 for success).
+        2: dataframe with iteration numbers and convergence rate information at all steps.
+
+        rate_tolerance: float value. If above 0.0, like 0.001, the algorithm will stop once the difference between the conv_rate variable of 2 consecutive iterations is below that specified value
 
         For examples, please open the ipfn script or look for help on functions ipfn_np and ipfn_df
         """
@@ -31,6 +42,7 @@ class ipfn(object):
         self.conv_rate = convergence_rate
         self.max_itr = max_iteration
         self.verbose = verbose
+        self.rate_tolerance = rate_tolerance
 
     @staticmethod
     def index_axis_elem(dims, axes, elems):
@@ -66,17 +78,17 @@ class ipfn(object):
         tables = [m]
         # TODO: do we need to persist all these dataframe? Or maybe we just need to persist the table_update and table_current
         # and then update the table_current to the table_update to the latest we have. And create an empty zero dataframe for table_update (Evelyn)
-        for inc in range(steps-1):
+        for inc in range(steps - 1):
             tables.append(np.array(np.zeros(m.shape)))
         original = copy.copy(m)
 
         # Calculate the new weights for each dimension
         for inc in range(steps):
-            if inc == (steps-1):
+            if inc == (steps - 1):
                 table_update = m
                 table_current = tables[inc]
             else:
-                table_update = tables[inc+1]
+                table_update = tables[inc + 1]
                 table_current = tables[inc]
             for dimension in dimensions[inc]:
                 product_elem.append(range(m.shape[dimension]))
@@ -95,7 +107,7 @@ class ipfn(object):
                 else:
                     # TODO: when inc == steps - 1, this part is also directly updating the dataframe m (Evelyn)
                     # If we are not going to persist every table generated, we could still keep this part to directly update dataframe m
-                    table_update[idx] = table_current_slice*1.0*xijk/mijk
+                    table_update[idx] = table_current_slice * 1.0 * xijk / mijk
                 # For debug purposes
                 # if np.isnan(table_update).any():
                 #     print(idx)
@@ -114,8 +126,8 @@ class ipfn(object):
                 m_slice = m[idx]
                 m_ijk = m_slice.sum()
                 # print('Current vs original', abs(m_ijk/ori_ijk - 1))
-                if abs(m_ijk/ori_ijk - 1) > max_conv:
-                    max_conv = abs(m_ijk/ori_ijk - 1)
+                if abs(m_ijk / ori_ijk - 1) > max_conv:
+                    max_conv = abs(m_ijk / ori_ijk - 1)
 
             product_elem = []
 
@@ -155,18 +167,18 @@ class ipfn(object):
 
         steps = len(aggregates)
         tables = [df]
-        for inc in range(steps-1):
+        for inc in range(steps - 1):
             tables.append(df.copy())
         original = df.copy()
 
         # Calculate the new weights for each dimension
         inc = 0
         for features in dimensions:
-            if inc == (steps-1):
+            if inc == (steps - 1):
                 table_update = df
                 table_current = tables[inc]
             else:
-                table_update = tables[inc+1]
+                table_update = tables[inc + 1]
                 table_current = tables[inc]
 
             tmp = table_current.groupby(features)[weight_col].sum()
@@ -188,7 +200,7 @@ class ipfn(object):
                 else:
                     table_update.loc[feature, weight_col] = \
                         table_current.loc[feature, weight_col].astype(float) * \
-                        xijk.loc[feature]/den
+                        xijk.loc[feature] / den
 
             table_update.reset_index(inplace=True)
             table_current.reset_index(inplace=True)
@@ -201,7 +213,7 @@ class ipfn(object):
         for features in dimensions:
             tmp = df.groupby(features)[weight_col].sum()
             ori_ijk = aggregates[inc]
-            temp_conv = max(abs(tmp/ori_ijk - 1))
+            temp_conv = max(abs(tmp / ori_ijk - 1))
             if temp_conv > max_conv:
                 max_conv = temp_conv
             inc += 1
@@ -214,25 +226,32 @@ class ipfn(object):
         """
 
         i = 0
-        conv = self.conv_rate * 100
+        conv = np.inf
+        old_conv = -np.inf
+        conv_list = []
         m = self.original
 
         # If the original data input is in pandas DataFrame format
         if isinstance(self.original, pd.DataFrame):
-            while i <= self.max_itr and conv > self.conv_rate:
-                m, conv = self.ipfn_df(m, self.aggregates, self.dimensions, self.weight_col)
-                i += 1
-                # print(i, conv)
-        # If the original data input is in numpy format
+            ipfn_method = self.ipfn_df
         elif isinstance(self.original, np.ndarray):
+            ipfn_method = self.ipfn_np
             self.original = self.original.astype('float64')
-            while i <= self.max_itr and conv > self.conv_rate:
-                m, conv = self.ipfn_np(m, self.aggregates, self.dimensions, self.weight_col)
-                i += 1
-                # print(i, conv)
+        else:
+            print('Data input instance not recognized')
+            sys.exit(0)
+        while ((i <= self.max_itr and conv > self.conv_rate) and
+               (i <= self.max_itr and abs(conv - old_conv) > self.rate_tolerance)):
+            old_conv = conv
+            m, conv = ipfn_method(m, self.aggregates, self.dimensions, self.weight_col)
+            conv_list.append(conv)
+            i += 1
         converged = 1
         if i <= self.max_itr:
-            print('ipfn converged')
+            if not conv > self.conv_rate:
+                print('ipfn converged: convergence_rate below threshold')
+            elif not abs(conv - old_conv) > self.rate_tolerance:
+                print('ipfn converged: convergence_rate not updating or below rate_tolerance')
         else:
             print('Maximum iterations reached')
             converged = 0
@@ -242,6 +261,8 @@ class ipfn(object):
             return m
         elif self.verbose == 1:
             return m, converged
+        elif self.verbose == 2:
+            return m, converged, pd.DataFrame({'iteration': range(i), 'conv': conv_list}).set_index('iteration')
         else:
             print('wrong verbose input, return None')
             sys.exit(0)
