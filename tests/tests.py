@@ -13,7 +13,7 @@ class TestIpfn:
         aggregates = [xip, xpj]
         dimensions = [[0], [1]]
 
-        IPF = ipfn(m, aggregates, dimensions, convergence_rate=1e-5)
+        IPF = ipfn.ipfn(m, aggregates, dimensions, convergence_rate=1e-5)
         m = IPF.iteration()
 
         marginals1D = [xip, xpj]
@@ -65,7 +65,7 @@ class TestIpfn:
         aggregates = [xipp, xpjp, xppk, xijp, xpjk]
         dimensions = [[0], [1], [2], [0, 1], [1, 2]]
 
-        IPF = ipfn(m, aggregates, dimensions, convergence_rate=0.0001)
+        IPF = ipfn.ipfn(m, aggregates, dimensions, convergence_rate=0.0001)
         m = IPF.iteration()
 
         marginals1D = [xipp, xpjp, xppk]
@@ -155,7 +155,7 @@ class TestIpfn:
         aggregates = [xijkp, xpjkl, xipkl, xijpl, xippp, xpjpp, xppkp, xpppl, xijpp, xpjkp, xppkl, xippl]
         dimensions = [[0, 1, 2], [1, 2, 3], [0, 2, 3], [0, 1, 3], [0], [1], [2], [3], [0, 1], [1, 2], [2, 3], [0, 3]]
 
-        IPF = ipfn(m, aggregates, dimensions, convergence_rate=1e-6)
+        IPF = ipfn.ipfn(m, aggregates, dimensions, convergence_rate=1e-6)
         m = IPF.iteration()
 
         marginals1D = [xippp, xpjpp, xppkp, xpppl]
@@ -246,7 +246,7 @@ class TestIpfn:
         aggregates = [xipp, xpjp, xppk, xijp, xpjk]
         dimensions = [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']]
 
-        IPF = ipfn(df, aggregates, dimensions, convergence_rate=1e-5)
+        IPF = ipfn.ipfn(df, aggregates, dimensions, convergence_rate=1e-5)
         df = IPF.iteration()
 
         marginals1D = [(xipp, ['dma']), (xpjp, ['size']), (xppk, 'age')]
