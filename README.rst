@@ -12,12 +12,19 @@ The algorithm exists in 2 versions:
 The algorithm recognizes the input variable type and and uses the appropriate version to solve the problem. To install the package:
 
 *   pip install ipfn
+*   pip install git+http://github.com/dirguis/ipfn@master
 
 For more information and examples, please visit:
 
 *   `wikipedia page on ipf <https://en.wikipedia.org/wiki/Iterative_proportional_fitting>`_
 *   `slides explaining the methodology and links to specific examples <http://www.demog.berkeley.edu/~eddieh/IPFDescription/AKDOLWDIPFTWOD.pdf>`_
 *   https://github.com/Dirguis/ipfn
+
+----
+
+If you want to test the package, clone the repo and from the main folder, run:
+
+*   py.test --verbose --color=yes tests/tests.py
 
 ----
 
@@ -49,7 +56,7 @@ Please, follow the example below to run the package. Several additional examples
 
 First, let us define a matrix of N=3 dimensions, the matrix being of specific size 2*4*3 and populate that matrix with some values ::
 
-    from ipfn import *
+    from ipfn import ipfn
     import numpy as np
     import pandas as pd
 
@@ -101,17 +108,17 @@ Define the aggregates list and the corresponding list of dimension to indicate t
 
 Finally, run the algorithm::
 
-    IPF = ipfn(m, aggregates, dimensions)
+    IPF = ipfn.ipfn(m, aggregates, dimensions)
     m = IPF.iteration()
-    print xijp[0,0]
-    print m[0, 0, :].sum()
+    print(xijp[0,0])
+    print(m[0, 0, :].sum())
 
 
 Example with the pandas version of the algorithm:
 ------------------------------------------------
 In the same fashion, we can run a similar example, but using a dataframe::
 
-    from ipfn import *
+    from ipfn import ipfn
     import numpy as np
     import pandas as pd
 
@@ -167,19 +174,15 @@ In the same fashion, we can run a similar example, but using a dataframe::
     aggregates = [xipp, xpjp, xppk, xijp, xpjk]
     dimensions = [['dma'], ['size'], ['age'], ['dma', 'size'], ['size', 'age']]
 
-    IPF = ipfn(df, aggregates, dimensions)
+    IPF = ipfn.ipfn(df, aggregates, dimensions)
     df = IPF.iteration()
 
-    print df
-    print df.groupby('size')['total'].sum(), xpjp
+    print(df)
+    print(df.groupby('size')['total'].sum(), xpjp)
 
 Added notes:
 ------------
 
-Several examples, using the numpy or pandas version of the algorithm are listed in the script `ipfn.py <https://github.com/Dirguis/ipfn.git>`_. Comment, uncomment to parts of interests and run the script::
-
-    python ipfn.py
-
 To call the algorithm in a program, execute::
 
-    import ipfn
+    from ipfn import ipfn
