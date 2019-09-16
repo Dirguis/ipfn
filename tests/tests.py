@@ -254,7 +254,7 @@ class TestIpfn:
         for marginal, vertical in marginals1D:
             features = marginal.index.tolist()
             for feature in features:
-                assert round(df.groupby(vertical)['total'].sum().loc[feature], 2) == round(marginal.loc[feature], 2)
+                assert round(df.groupby(vertical).sum().loc[feature], 2) == round(marginal.loc[feature], 2)
             m_inc += 1
 
         marginals2D = [(xijp, ['dma', 'size']), (xpjk, ['size', 'age'])]
@@ -262,5 +262,5 @@ class TestIpfn:
         for marginal, vertical in marginals2D:
             features = marginal.index.tolist()
             for feature in features:
-                assert round(df.groupby(vertical)['total'].sum().loc[feature], 2) == round(marginal.loc[feature], 2)
+                assert round(df.groupby(vertical).sum().loc[feature], 2) == round(marginal.loc[feature], 2)
             m_inc += 1
