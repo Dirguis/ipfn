@@ -153,27 +153,25 @@ class ipfn(object):
         print(df)
         print(df.groupby('age')['total'].sum(), xip)"""
 
-        aggrs = self.aggregates
-        dims = self.dimensions
+        aggregates = self.aggregates
+        dimensions = self.dimensions
         factors = []
         index_names = df.index.names
 
-        for k, d in enumerate(dims):
+        for k, d in enumerate(dimensions):
             dfg = df.groupby(level=d).sum()
-            f = aggrs[k].div(dfg)
-            # Joining on multiindexes of not same length is not implemented
+            f = aggregates[k].div(dfg)
+            # Requires pandas >= 0.25
             if len(d) > 1:
-                unstack_levels = [lvl for lvl in index_names if lvl not in d]
                 rem_index = [lvl for lvl in index_names if lvl in d]
-                df = (df.unstack(unstack_levels)
-                      .multiply(f.reorder_levels(rem_index), axis=0)
-                      .stack(unstack_levels)
-                      .reorder_levels(index_names))
+                df = (df.multiply(f.reorder_levels(rem_index), axis=0)
+                        .reorder_levels(index_names))
             else:
                 df = df.multiply(f, fill_value=0)
 
             f = f.sub(1).abs().max()
             factors.append(f)
+
         # Check for convergence
         max_conv = max(factors)
         
