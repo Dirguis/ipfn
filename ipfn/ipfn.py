@@ -213,36 +213,24 @@ class ipfn(object):
                 # print(i, conv)
         # If the original data input is in numpy format
         elif isinstance(self.original, np.ndarray):
-            ipfn_method = self.ipfn_np
             self.original = self.original.astype('float64')
             while i <= self.max_itr and conv > self.conv_rate:
                 m, conv = self.ipfn_np(m, self.aggregates, self.dimensions, self.weight_col)
                 i += 1
                 # print(i, conv)
 
-        if isinstance(m, pd.Series):
-		    #Reset to dataframe
-            m.name = self.weight_col
-            m = m.reset_index()
-            m.set_index(self.original.index.names, inplace=True)
-
-        converged = 1
+        converged = True
         if i <= self.max_itr:
-            if (not conv > self.conv_rate) & (self.verbose > 1):
-                print('ipfn converged: convergence_rate below threshold')
-            elif not abs(conv - old_conv) > self.rate_tolerance:
-                print('ipfn converged: convergence_rate not updating or below rate_tolerance')
+            print('ipfn converged')
         else:
             print('Maximum iterations reached')
-            converged = 0
+            converged = False
 
         # Handle the verbose
         if self.verbose == 0:
             return m
         elif self.verbose == 1:
             return m, converged
-        elif self.verbose == 2:
-            return m, converged, pd.DataFrame({'iteration': range(i), 'conv': conv_list}).set_index('iteration')
         else:
             print('wrong verbose input, return None')
             sys.exit(0)
