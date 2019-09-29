@@ -1,3 +1,3 @@
-from ipfn import *
+from ipfn import ipfn
 
 __all__ = ['ipfn']
