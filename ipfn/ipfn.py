@@ -165,15 +165,13 @@ class ipfn(object):
         print(df)
         print(df.groupby('age')['total'].sum(), xip)"""
 
-        aggregates = self.aggregates
-        dimensions = self.dimensions
         factors = []
         index_names = df.index.names
 
         for k, d in enumerate(dimensions):
             dfg = df.groupby(level=d).sum()
             f = aggregates[k].div(dfg)
-            # Requires pandas >= 0.25
+            # Requires pandas >= 0.24
             if len(d) > 1:
                 rem_index = [lvl for lvl in index_names if lvl in d]
                 df = (df.multiply(f.reorder_levels(rem_index), axis=0)
@@ -191,36 +189,40 @@ class ipfn(object):
 
     def iteration(self):
         """
-        Runs the ipfn algorithm. Automatically detects of working with
-        numpy ndarray or pandas dataframes.
+        Runs the ipfn algorithm. Automatically detects of working with numpy ndarray or pandas dataframes.
         """
+
+        def _prepare_df_format(df):
+            # Add index
+            idxcols = list(set(x for l in self.dimensions for x in l))
+            df = df.reset_index().set_index(idxcols)
+            # Turn to series
+            df = df[self.weight_col]
+            return df
 
         i = 0
         conv = self.conv_rate * 100
-        m = self.original.copy()
+        conv_progress = []
+        m = self.original
 
         # If the original data input is in pandas DataFrame format
         if isinstance(self.original, pd.DataFrame):
-            # Add index
-            indexcols = list(set(x for l in self.dimensions for x in l))
-            m.reset_index(inplace=True)
-            m.set_index(indexcols, inplace=True)
-            # Turn to series
-            m = m[self.weight_col]
-            while i <= self.max_itr and conv > self.conv_rate:
-                m, conv = self.ipfn_df(m, self.aggregates, self.dimensions)
-                i += 1
-                # print(i, conv)
-        # If the original data input is in numpy format
+            m = _prepare_df_format(m)
+            ipfn_method = self.ipfn_df
         elif isinstance(self.original, np.ndarray):
+            ipfn_method = self.ipfn_np
             self.original = self.original.astype('float64')
-            while i <= self.max_itr and conv > self.conv_rate:
-                m, conv = self.ipfn_np(m, self.aggregates, self.dimensions, self.weight_col)
-                i += 1
-                # print(i, conv)
+        else:
+            print('Data input instance not recognized')
+            sys.exit(0)
 
-        converged = True
+        while (i <= self.max_itr) and (conv > self.conv_rate):
+            m, conv = ipfn_method(m, self.aggregates, self.dimensions)
+            conv_progress.append(conv)
+            i += 1
+
         if i <= self.max_itr:
+            converged = True
             print('ipfn converged')
         else:
             print('Maximum iterations reached')
@@ -231,6 +233,11 @@ class ipfn(object):
             return m
         elif self.verbose == 1:
             return m, converged
+        elif self.verbose == 2:
+            conv_progress = pd.DataFrame({'iteration': range(i),
+                                          'convergence': conv_progress}
+                                         ).set_index('iteration')
+            return m, converged, conv_progress
         else:
             print('wrong verbose input, return None')
             sys.exit(0)
