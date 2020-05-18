@@ -72,6 +72,22 @@ class ipfn(object):
         IPF = ipfn(m, aggregates, dimensions)
         m = IPF.iteration()
         """
+
+        # Check that the inputs are numpay arrays of floats
+        inc = 0
+        for aggregate in aggregates:
+            if not isinstance(aggregate, np.ndarray):
+                aggregate = np.array(aggregate).astype(np.float)
+                aggregates[inc] = aggregate
+            elif aggregate.dtype not in [np.float, float]:
+                aggregate = aggregate.astype(np.float)
+                aggregates[inc] = aggregate
+            inc += 1
+        if not isinstance(m, np.ndarray):
+            m = np.array(m)
+        elif m.dtype not in [np.float, float]:
+            m = m.astype(np.float)
+
         steps = len(aggregates)
         dim = len(m.shape)
         product_elem = []
@@ -86,7 +102,7 @@ class ipfn(object):
         for inc in range(steps):
             if inc == (steps - 1):
                 table_update = m
-                table_current = tables[inc]
+                table_current = tables[inc].copy()
             else:
                 table_update = tables[inc + 1]
                 table_current = tables[inc]
@@ -176,7 +192,7 @@ class ipfn(object):
         for features in dimensions:
             if inc == (steps - 1):
                 table_update = df
-                table_current = tables[inc]
+                table_current = tables[inc].copy()
             else:
                 table_update = tables[inc + 1]
                 table_current = tables[inc]
