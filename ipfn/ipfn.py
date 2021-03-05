@@ -2,7 +2,6 @@
 from __future__ import print_function
 import numpy as np
 import pandas as pd
-import sys
 from itertools import product
 import copy
 
@@ -41,6 +40,8 @@ class ipfn(object):
         self.weight_col = weight_col
         self.conv_rate = convergence_rate
         self.max_itr = max_iteration
+        if verbose not in [0, 1, 2]:
+            raise(ValueError(f"wrong verbose input, must be either 0, 1 or 2 but got {verbose}"))
         self.verbose = verbose
         self.rate_tolerance = rate_tolerance
 
@@ -267,8 +268,7 @@ class ipfn(object):
             ipfn_method = self.ipfn_np
             self.original = self.original.astype('float64')
         else:
-            print('Data input instance not recognized')
-            sys.exit(0)
+            raise(ValueError(f'Data input instance not recognized, {m} is not a numpy array or pandas DataFrame'))
         while ((i <= self.max_itr and conv > self.conv_rate) and (i <= self.max_itr and abs(conv - old_conv) > self.rate_tolerance)):
             old_conv = conv
             m, conv = ipfn_method(m, self.aggregates, self.dimensions, self.weight_col)
@@ -292,5 +292,4 @@ class ipfn(object):
         elif self.verbose == 2:
             return m, converged, pd.DataFrame({'iteration': range(i), 'conv': conv_list}).set_index('iteration')
         else:
-            print('wrong verbose input, return None')
-            sys.exit(0)
+            raise(ValueError(f'wrong verbose input, must be either 0, 1 or 2 but got {self.verbose}'))
