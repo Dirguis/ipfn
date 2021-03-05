@@ -2,9 +2,31 @@ from __future__ import print_function
 from context import ipfn
 import numpy as np
 import pandas as pd
+import pytest
 
 
 class TestIpfn:
+
+    def test_bad_verbose(self):
+        m = np.array([[8., 4., 6., 7.], [3., 6., 5., 2.], [9., 11., 3., 1.]], )
+        xip = np.array([20., 18., 22.])
+        xpj = np.array([18., 16., 12., 14.])
+        aggregates = [xip, xpj]
+        dimensions = [[0], [1]]
+
+        with pytest.raises(ValueError):
+            IPF = ipfn.ipfn(m, aggregates, dimensions, convergence_rate=1e-5, verbose=4)
+
+    def test_bad_types(self):
+        m = [[8., 4., 6., 7.], [3., 6., 5., 2.], [9., 11., 3., 1.]] # not a np.array
+        xip = np.array([20., 18., 22.])
+        xpj = np.array([18., 16., 12., 14.])
+        aggregates = [xip, xpj]
+        dimensions = [[0], [1]]
+
+        IPF = ipfn.ipfn(m, aggregates, dimensions, convergence_rate=1e-5)
+        with pytest.raises(ValueError):
+            m = IPF.iteration()
 
     def test_numpy_2D(self):
         m = np.array([[8., 4., 6., 7.], [3., 6., 5., 2.], [9., 11., 3., 1.]], )
