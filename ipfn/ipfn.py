@@ -8,9 +8,17 @@ import copy
 
 
 class ipfn(object):
-
-    def __init__(self, original, aggregates, dimensions, weight_col='total',
-                 convergence_rate=1e-5, max_iteration=500, verbose=0, rate_tolerance=1e-8):
+    def __init__(
+        self,
+        original,
+        aggregates,
+        dimensions,
+        weight_col="total",
+        convergence_rate=1e-5,
+        max_iteration=500,
+        verbose=0,
+        rate_tolerance=1e-8,
+    ):
         """
         Initialize the ipfn class
 
@@ -49,15 +57,15 @@ class ipfn(object):
         inc_axis = 0
         idx = ()
         for dim in range(dims):
-            if (inc_axis < len(axes)):
-                if (dim == axes[inc_axis]):
+            if inc_axis < len(axes):
+                if dim == axes[inc_axis]:
                     idx += (elems[inc_axis],)
                     inc_axis += 1
                 else:
                     idx += (np.s_[:],)
         return idx
 
-    def ipfn_np(self, m, aggregates, dimensions, weight_col='total'):
+    def ipfn_np(self, m, aggregates, dimensions, weight_col="total"):
         """
         Runs the ipfn method from a matrix m, aggregates/marginals and the dimension(s) preserved.
         For example:
@@ -72,6 +80,22 @@ class ipfn(object):
         IPF = ipfn(m, aggregates, dimensions)
         m = IPF.iteration()
         """
+
+        # Check that the inputs are numpay arrays of floats
+        inc = 0
+        for aggregate in aggregates:
+            if not isinstance(aggregate, np.ndarray):
+                aggregate = np.array(aggregate).astype(np.float)
+                aggregates[inc] = aggregate
+            elif aggregate.dtype not in [np.float, float]:
+                aggregate = aggregate.astype(np.float)
+                aggregates[inc] = aggregate
+            inc += 1
+        if not isinstance(m, np.ndarray):
+            m = np.array(m)
+        elif m.dtype not in [np.float, float]:
+            m = m.astype(np.float)
+
         steps = len(aggregates)
         dim = len(m.shape)
         product_elem = []
@@ -86,7 +110,7 @@ class ipfn(object):
         for inc in range(steps):
             if inc == (steps - 1):
                 table_update = m
-                table_current = tables[inc]
+                table_current = tables[inc].copy()
             else:
                 table_update = tables[inc + 1]
                 table_current = tables[inc]
@@ -174,8 +198,9 @@ class ipfn(object):
             # Requires pandas >= 0.24
             if len(d) > 1:
                 rem_index = [lvl for lvl in index_names if lvl in d]
-                df = (df.multiply(f.reorder_levels(rem_index), axis=0)
-                        .reorder_levels(index_names))
+                df = df.multiply(f.reorder_levels(rem_index), axis=0).reorder_levels(
+                    index_names
+                )
             else:
                 df = df.multiply(f, fill_value=0)
 
@@ -211,9 +236,9 @@ class ipfn(object):
             ipfn_method = self.ipfn_df
         elif isinstance(self.original, np.ndarray):
             ipfn_method = self.ipfn_np
-            self.original = self.original.astype('float64')
+            self.original = self.original.astype("float64")
         else:
-            print('Data input instance not recognized')
+            print("Data input instance not recognized")
             sys.exit(0)
 
         while (i <= self.max_itr) and (conv > self.conv_rate):
@@ -223,9 +248,9 @@ class ipfn(object):
 
         if i <= self.max_itr:
             converged = True
-            print('ipfn converged')
+            print("ipfn converged")
         else:
-            print('Maximum iterations reached')
+            print("Maximum iterations reached")
             converged = False
 
         # Handle the verbose
@@ -234,10 +259,10 @@ class ipfn(object):
         elif self.verbose == 1:
             return m, converged
         elif self.verbose == 2:
-            conv_progress = pd.DataFrame({'iteration': range(i),
-                                          'convergence': conv_progress}
-                                         ).set_index('iteration')
+            conv_progress = pd.DataFrame(
+                {"iteration": range(i), "convergence": conv_progress}
+            ).set_index("iteration")
             return m, converged, conv_progress
         else:
-            print('wrong verbose input, return None')
+            print("wrong verbose input, return None")
             sys.exit(0)
