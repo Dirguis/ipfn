@@ -50,24 +50,24 @@ Preserved dimensions along which we sum to get the corresponding aggregates.
 
   * rate_tolerance: float value. If above 0.0, like 0.001, the algorithm will stop once the difference between the conv_rate variable of 2 consecutive iterations is below that specified value.
 
-  Wikipedia example with Numpy:
-  ----------------------------
-  To illustrate Iterative Proportional Fitting, Wikipedia uses an example `here <https://en.wikipedia.org/wiki/Iterative_proportional_fitting#Example>`_. Here is that example solved with IPFN ::
+Wikipedia example with Numpy:
+----------------------------
+To illustrate Iterative Proportional Fitting, Wikipedia uses an example `here <https://en.wikipedia.org/wiki/Iterative_proportional_fitting#Example>`_. Here is that example solved with IPFN ::
 
-      import numpy as np
-      from ipfn import ipfn
+    import numpy as np
+    from ipfn import ipfn
 
-      m = [[40, 30, 20, 10], [35, 50, 100, 75], [30, 80, 70, 120], [20, 30, 40, 50]]
-      m = np.array(m)
-      xip = np.array([150, 300, 400, 150])
-      xpj = np.array([200, 300, 400, 100])
+    m = [[40, 30, 20, 10], [35, 50, 100, 75], [30, 80, 70, 120], [20, 30, 40, 50]]
+    m = np.array(m)
+    xip = np.array([150, 300, 400, 150])
+    xpj = np.array([200, 300, 400, 100])
 
-      aggregates = [xip, xpj]
-      dimensions = [[0], [1]]
+    aggregates = [xip, xpj]
+    dimensions = [[0], [1]]
 
-      IPF = ipfn.ipfn(m, aggregates, dimensions, convergence_rate=1e-6)
-      m = IPF.iteration()
-      print(m)
+    IPF = ipfn.ipfn(m, aggregates, dimensions, convergence_rate=1e-6)
+    m = IPF.iteration()
+    print(m)
 
 
 Example with the numpy version of the algorithm:
