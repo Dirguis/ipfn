@@ -78,16 +78,16 @@ class ipfn(object):
         inc = 0
         for aggregate in aggregates:
             if not isinstance(aggregate, np.ndarray):
-                aggregate = np.array(aggregate).astype(np.float)
+                aggregate = np.array(aggregate).astype(float)
                 aggregates[inc] = aggregate
-            elif aggregate.dtype not in [np.float, float]:
-                aggregate = aggregate.astype(np.float)
+            elif aggregate.dtype not in [float, float]:
+                aggregate = aggregate.astype(float)
                 aggregates[inc] = aggregate
             inc += 1
         if not isinstance(m, np.ndarray):
             m = np.array(m)
-        elif m.dtype not in [np.float, float]:
-            m = m.astype(np.float)
+        elif m.dtype not in [float, float]:
+            m = m.astype(float)
 
         steps = len(aggregates)
         dim = len(m.shape)
