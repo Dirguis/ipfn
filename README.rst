@@ -50,11 +50,12 @@ Preserved dimensions along which we sum to get the corresponding aggregates.
 
   * rate_tolerance: float value. If above 0.0, like 0.001, the algorithm will stop once the difference between the conv_rate variable of 2 consecutive iterations is below that specified value.
 
+
 Wikipedia example with Numpy:
 ----------------------------
 To illustrate Iterative Proportional Fitting, Wikipedia uses an example `here <https://en.wikipedia.org/wiki/Iterative_proportional_fitting#Example>`_
 
-Below is that example solved with IPFN ::
+Below is that example solved with IPFN::
 
     import numpy as np
     from ipfn import ipfn
