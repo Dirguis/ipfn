@@ -209,9 +209,9 @@ class ipfn(object):
 
             multi_index_flag = isinstance(table_update.index, pd.MultiIndex)
             if multi_index_flag:
-                if not table_update.index.is_lexsorted():
+                if not table_update.index.is_monotonic_increasing:
                     table_update.sort_index(inplace=True)
-                if not table_current.index.is_lexsorted():
+                if not table_current.index.is_monotonic_increasing:
                     table_current.sort_index(inplace=True)
 
             for feature in product(*feat_l):
@@ -268,7 +268,7 @@ class ipfn(object):
             ipfn_method = self.ipfn_np
             self.original = self.original.astype('float64')
         else:
-            raise(ValueError(f'Data input instance not recognized, {m} is not a numpy array or pandas DataFrame'))
+            raise(ValueError(f'Data input instance not recognized. The input matrix is not a numpy array or pandas DataFrame'))
         while ((i <= self.max_itr and conv > self.conv_rate) and (i <= self.max_itr and abs(conv - old_conv) > self.rate_tolerance)):
             old_conv = conv
             m, conv = ipfn_method(m, self.aggregates, self.dimensions, self.weight_col)

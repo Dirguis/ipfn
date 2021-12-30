@@ -18,7 +18,7 @@ class TestIpfn:
             IPF = ipfn.ipfn(m, aggregates, dimensions, convergence_rate=1e-5, verbose=4)
 
     def test_bad_types(self):
-        m = [[8., 4., 6., 7.], [3., 6., 5., 2.], [9., 11., 3., 1.]] # not a np.array
+        m = [[8., 4., 6., 7.], [3., 6., 5., 2.], [9., 11., 3., 1.]]  # not a np.array
         xip = np.array([20., 18., 22.])
         xpj = np.array([18., 16., 12., 14.])
         aggregates = [xip, xpj]
