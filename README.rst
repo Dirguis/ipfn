@@ -52,7 +52,7 @@ Preserved dimensions along which we sum to get the corresponding aggregates.
 
 
 Wikipedia example with Numpy:
-----------------------------
+-----------------------------
 To illustrate Iterative Proportional Fitting, Wikipedia uses an example `here <https://en.wikipedia.org/wiki/Iterative_proportional_fitting#Example>`_
 
 Below is that example solved with IPFN::
