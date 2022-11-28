@@ -253,14 +253,12 @@ class ipfn(object):
         """
         Runs the ipfn algorithm. Automatically detects of working with numpy ndarray or pandas dataframes.
         """
-
-        i = 0
-        conv = np.inf
-        old_conv = -np.inf
+        old_conv = np.inf
         conv_list = []
+        converged = 1
         m = self.original
 
-        # If the original data input is in pandas DataFrame format
+        # Prepare input data
         if isinstance(self.original, pd.DataFrame):
             ipfn_method = self.ipfn_df
         elif isinstance(self.original, np.ndarray):
@@ -268,17 +266,19 @@ class ipfn(object):
             self.original = self.original.astype('float64')
         else:
             raise ValueError(f"Data input instance not recognized. The input matrix is not a numpy array or pandas DataFrame")
-        while ((i <= self.max_itr and conv > self.conv_rate) and (i <= self.max_itr and abs(conv - old_conv) > self.rate_tolerance)):
-            old_conv = conv
+
+        # Run iterations
+        for i in range(self.max_itr):
             m, conv = ipfn_method(m, self.aggregates, self.dimensions, self.weight_col)
             conv_list.append(conv)
-            i += 1
-        converged = 1
-        if i <= self.max_itr:
-            if (not conv > self.conv_rate) & (self.verbose > 1):
-                print("ipfn converged: convergence_rate below threshold")
-            elif not abs(conv - old_conv) > self.rate_tolerance:
+            if conv <= self.conv_rate:
+                if self.verbose > 1:
+                    print("ipfn converged: convergence_rate below threshold")
+                break
+            if abs(conv - old_conv) <= self.rate_tolerance:
                 print("ipfn converged: convergence_rate not updating or below rate_tolerance")
+                break
+            old_conv = conv
         else:
             print("Maximum iterations reached")
             converged = 0
@@ -289,6 +289,6 @@ class ipfn(object):
         elif self.verbose == 1:
             return m, converged
         elif self.verbose == 2:
-            return m, converged, pd.DataFrame({'iteration': range(i), 'conv': conv_list}).set_index('iteration')
+            return m, converged, pd.DataFrame({'iteration': range(1, i+2), 'conv': conv_list}).set_index('iteration')
         else:
             raise ValueError(f"wrong verbose input, must be either 0, 1 or 2 but got {self.verbose}")
