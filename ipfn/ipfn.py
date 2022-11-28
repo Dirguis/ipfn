@@ -2,7 +2,16 @@ from __future__ import print_function
 import numpy as np
 import pandas as pd
 from itertools import product
-import copy
+
+
+def asfloatarray(a, dtype='float64'):
+    """ Return `a` as ndarray of type `dtype`.
+        If a is already an ndarray of floating point type, a copy is returned.
+        This preserves single precision `a` and otherwise converts is to double precision.
+    """
+    if isinstance(a, np.ndarray) and a.dtype.kind == 'f':
+        return a.copy()
+    return np.asarray(a, dtype=dtype)
 
 
 class ipfn(object):
@@ -74,19 +83,12 @@ class ipfn(object):
         """
 
         # Check that the inputs are numpy arrays of floats
-        inc = 0
+        assert isinstance(m, np.ndarray)
+        assert m.dtype.kind == 'f'
         for aggregate in aggregates:
-            if not isinstance(aggregate, np.ndarray):
-                aggregate = np.array(aggregate).astype(float)
-                aggregates[inc] = aggregate
-            elif aggregate.dtype not in [float, float]:
-                aggregate = aggregate.astype(float)
-                aggregates[inc] = aggregate
-            inc += 1
-        if not isinstance(m, np.ndarray):
-            m = np.array(m)
-        elif m.dtype not in [float, float]:
-            m = m.astype(float)
+            assert isinstance(aggregate, np.ndarray)
+            assert aggregate.dtype.kind == 'f'
+        assert len(aggregates) == len(dimensions)
 
         steps = len(aggregates)
         dim = len(m.shape)
@@ -96,7 +98,6 @@ class ipfn(object):
         # and then update the table_current to the table_update to the latest we have. And create an empty zero dataframe for table_update (Evelyn)
         for inc in range(steps - 1):
             tables.append(np.array(np.zeros(m.shape)))
-        original = copy.copy(m)
 
         # Calculate the new weights for each dimension
         for inc in range(steps):
@@ -185,7 +186,6 @@ class ipfn(object):
         tables = [df]
         for inc in range(steps - 1):
             tables.append(df.copy())
-        original = df.copy()
 
         # Calculate the new weights for each dimension
         inc = 0
@@ -256,20 +256,22 @@ class ipfn(object):
         old_conv = np.inf
         conv_list = []
         converged = 1
-        m = self.original
 
         # Prepare input data
         if isinstance(self.original, pd.DataFrame):
             ipfn_method = self.ipfn_df
+            m = self.original.copy()
+            aggregates = self.aggregates
         elif isinstance(self.original, np.ndarray):
             ipfn_method = self.ipfn_np
-            self.original = self.original.astype('float64')
+            m = asfloatarray(self.original)
+            aggregates = [asfloatarray(aggregate) for aggregate in self.aggregates]
         else:
             raise ValueError(f"Data input instance not recognized. The input matrix is not a numpy array or pandas DataFrame")
 
         # Run iterations
         for i in range(self.max_itr):
-            m, conv = ipfn_method(m, self.aggregates, self.dimensions, self.weight_col)
+            m, conv = ipfn_method(m, aggregates, self.dimensions, self.weight_col)
             conv_list.append(conv)
             if conv <= self.conv_rate:
                 if self.verbose > 1:
