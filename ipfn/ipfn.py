@@ -93,43 +93,32 @@ class ipfn(object):
         steps = len(aggregates)
         dim = len(m.shape)
         product_elem = []
-        tables = [m]
-        # TODO: do we need to persist all these dataframe? Or maybe we just need to persist the table_update and table_current
-        # and then update the table_current to the table_update to the latest we have. And create an empty zero dataframe for table_update (Evelyn)
-        for inc in range(steps - 1):
-            tables.append(np.array(np.zeros(m.shape)))
+        m_new = np.zeros_like(m)
 
         # Calculate the new weights for each dimension
         for inc in range(steps):
-            if inc == (steps - 1):
-                table_update = m
-                table_current = tables[inc].copy()
-            else:
-                table_update = tables[inc + 1]
-                table_current = tables[inc]
             for dimension in dimensions[inc]:
                 product_elem.append(range(m.shape[dimension]))
             for item in product(*product_elem):
                 idx = self.index_axis_elem(dim, dimensions[inc], item)
-                table_current_slice = table_current[idx]
-                mijk = table_current_slice.sum()
+                m_slice = m[idx]
+                mijk = m_slice.sum()
                 # TODO: Directly put it as xijk = aggregates[inc][item] (Evelyn)
                 xijk = aggregates[inc]
                 xijk = xijk[item]
                 if mijk == 0:
-                    # table_current_slice += 1e-5
+                    # m_slice += 1e-5
                     # TODO: Basically, this part would remain 0 as always right? Cause if the sum of the slice is zero, then we only have zeros in this slice.
-                    # TODO: you could put it as table_update[idx] = table_current_slice (since multiplication on zero is still zero)
-                    table_update[idx] = table_current_slice
+                    # TODO: you could put it as m_new[idx] = m_slice (since multiplication on zero is still zero)
+                    m_new[idx] = m_slice
                 else:
-                    # TODO: when inc == steps - 1, this part is also directly updating the dataframe m (Evelyn)
-                    # If we are not going to persist every table generated, we could still keep this part to directly update dataframe m
-                    table_update[idx] = table_current_slice * 1.0 * xijk / mijk
+                    m_new[idx] = m_slice * 1.0 * xijk / mijk
                 # For debug purposes
-                # if np.isnan(table_update).any():
+                # if np.isnan(m_new).any():
                 #     print(idx)
                 #     sys.exit(0)
             product_elem = []
+            m, m_new = m_new, m
 
         # Check the convergence rate for each dimension
         max_conv = 0
