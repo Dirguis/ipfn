@@ -90,22 +90,17 @@ class ipfn(object):
             assert aggregate.dtype.kind == 'f'
         assert len(aggregates) == len(dimensions)
 
-        steps = len(aggregates)
         dim = len(m.shape)
-        product_elem = []
         m_new = np.zeros_like(m)
 
         # Calculate the new weights for each dimension
-        for inc in range(steps):
-            for dimension in dimensions[inc]:
-                product_elem.append(range(m.shape[dimension]))
+        for aggregate, dimension in zip(aggregates, dimensions):
+            product_elem = [range(m.shape[d]) for d in dimension]
             for item in product(*product_elem):
-                idx = self.index_axis_elem(dim, dimensions[inc], item)
+                idx = self.index_axis_elem(dim, dimension, item)
                 m_slice = m[idx]
                 mijk = m_slice.sum()
-                # TODO: Directly put it as xijk = aggregates[inc][item] (Evelyn)
-                xijk = aggregates[inc]
-                xijk = xijk[item]
+                xijk = aggregate[item]
                 if mijk == 0:
                     # m_slice += 1e-5
                     # TODO: Basically, this part would remain 0 as always right? Cause if the sum of the slice is zero, then we only have zeros in this slice.
@@ -117,25 +112,20 @@ class ipfn(object):
                 # if np.isnan(m_new).any():
                 #     print(idx)
                 #     sys.exit(0)
-            product_elem = []
             m, m_new = m_new, m
 
         # Check the convergence rate for each dimension
         max_conv = 0
-        for inc in range(steps):
-            # TODO: this part already generated before, we could somehow persist it. But it's not important (Evelyn)
-            for dimension in dimensions[inc]:
-                product_elem.append(range(m.shape[dimension]))
+        for aggregate, dimension in zip(aggregates, dimensions):
+            product_elem = [range(m.shape[d]) for d in dimension]
             for item in product(*product_elem):
-                idx = self.index_axis_elem(dim, dimensions[inc], item)
-                ori_ijk = aggregates[inc][item]
+                idx = self.index_axis_elem(dim, dimension, item)
+                ori_ijk = aggregate[item]
                 m_slice = m[idx]
                 m_ijk = m_slice.sum()
                 # print("Current vs original", abs(m_ijk/ori_ijk - 1))
                 if abs(m_ijk / ori_ijk - 1) > max_conv:
                     max_conv = abs(m_ijk / ori_ijk - 1)
-
-            product_elem = []
 
         return m, max_conv
 
