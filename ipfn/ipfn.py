@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from __future__ import print_function
 import numpy as np
 import pandas as pd
@@ -41,7 +40,7 @@ class ipfn(object):
         self.conv_rate = convergence_rate
         self.max_itr = max_iteration
         if verbose not in [0, 1, 2]:
-            raise(ValueError(f"wrong verbose input, must be either 0, 1 or 2 but got {verbose}"))
+            raise ValueError(f"wrong verbose input, must be either 0, 1 or 2 but got {verbose}")
         self.verbose = verbose
         self.rate_tolerance = rate_tolerance
 
@@ -74,7 +73,7 @@ class ipfn(object):
         m = IPF.iteration()
         """
 
-        # Check that the inputs are numpay arrays of floats
+        # Check that the inputs are numpy arrays of floats
         inc = 0
         for aggregate in aggregates:
             if not isinstance(aggregate, np.ndarray):
@@ -142,7 +141,7 @@ class ipfn(object):
                 ori_ijk = aggregates[inc][item]
                 m_slice = m[idx]
                 m_ijk = m_slice.sum()
-                # print('Current vs original', abs(m_ijk/ori_ijk - 1))
+                # print("Current vs original", abs(m_ijk/ori_ijk - 1))
                 if abs(m_ijk / ori_ijk - 1) > max_conv:
                     max_conv = abs(m_ijk / ori_ijk - 1)
 
@@ -268,7 +267,7 @@ class ipfn(object):
             ipfn_method = self.ipfn_np
             self.original = self.original.astype('float64')
         else:
-            raise(ValueError(f'Data input instance not recognized. The input matrix is not a numpy array or pandas DataFrame'))
+            raise ValueError(f"Data input instance not recognized. The input matrix is not a numpy array or pandas DataFrame")
         while ((i <= self.max_itr and conv > self.conv_rate) and (i <= self.max_itr and abs(conv - old_conv) > self.rate_tolerance)):
             old_conv = conv
             m, conv = ipfn_method(m, self.aggregates, self.dimensions, self.weight_col)
@@ -277,11 +276,11 @@ class ipfn(object):
         converged = 1
         if i <= self.max_itr:
             if (not conv > self.conv_rate) & (self.verbose > 1):
-                print('ipfn converged: convergence_rate below threshold')
+                print("ipfn converged: convergence_rate below threshold")
             elif not abs(conv - old_conv) > self.rate_tolerance:
-                print('ipfn converged: convergence_rate not updating or below rate_tolerance')
+                print("ipfn converged: convergence_rate not updating or below rate_tolerance")
         else:
-            print('Maximum iterations reached')
+            print("Maximum iterations reached")
             converged = 0
 
         # Handle the verbose
@@ -292,4 +291,4 @@ class ipfn(object):
         elif self.verbose == 2:
             return m, converged, pd.DataFrame({'iteration': range(i), 'conv': conv_list}).set_index('iteration')
         else:
-            raise(ValueError(f'wrong verbose input, must be either 0, 1 or 2 but got {self.verbose}'))
+            raise ValueError(f"wrong verbose input, must be either 0, 1 or 2 but got {self.verbose}")
